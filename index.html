@@ -105,10 +105,9 @@
     let myId = localStorage.getItem('k_on_my_id') || 'user_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('k_on_my_id', myId);
 
-    // ローカルの入力状態を完全に独立させる
     let me = { id: myId, name: "未設定の部員", parts: ["ギター"], bio: "設定を変更して使ってください！", bandIds: [] };
-    if(localStorage.getItem('k_on_me_v4')) {
-      me = JSON.parse(localStorage.getItem('k_on_me_v4'));
+    if(localStorage.getItem('k_on_me_v5')) {
+      me = JSON.parse(localStorage.getItem('k_on_me_v5'));
     }
 
     let allUsers = []; 
@@ -123,27 +122,28 @@
           allUsers = data;
           const myCloudData = allUsers.find(u => u.id === myId);
           if (myCloudData) {
-            // バンドの選択状況だけを同期する（名前やパートは入力の邪魔をしないよう上書きしない）
             me.bandIds = myCloudData.bandIds || [];
           }
-          // マイページ以外の時だけ画面を自動更新する（入力の邪魔を絶対にしない）
-          if (currentTab !== 'mypage') {
+          // 重要：読み込み時は、HTML構造全体を破壊せず、リストの中身とモーダルの数値だけをそっと更新する
+          if (currentTab === 'home') {
+            updateBandListOnly();
+          } else if (currentTab === 'search') {
             render();
-            if (currentSelectedBandId) openModal(currentSelectedBandId);
           }
+          if (currentSelectedBandId) updateModalOnly(currentSelectedBandId);
         }
-      } catch (e) { console.error("データ読み込みエラー:", e); }
+      } catch (e) { console.error(e); }
     }
 
+    // 2秒ごとに裏でデータだけを綺麗に同期する
     setInterval(loadData, 2000);
     loadData();
-    setTimeout(render, 100);
 
     async function saveMyDataToCloud() {
-      localStorage.setItem('k_on_me_v4', JSON.stringify(me));
+      localStorage.setItem('k_on_me_v5', JSON.stringify(me));
       try {
         await supabaseClient.from('users').upsert(me);
-      } catch(e) { console.error("保存エラー:", e); }
+      } catch(e) { console.error(e); }
     }
 
     function render() {
@@ -153,18 +153,22 @@
       ['home', 'search', 'mypage'].forEach(tab => {
         const el = document.getElementById(`tab-${tab}`);
         if(!el) return;
-        if(tab === currentTab) {
-          el.className = "flex flex-col items-center gap-1 text-orange-500 font-bold flex-1 py-2";
-        } else {
-          el.className = "flex flex-col items-center gap-1 text-gray-400 flex-1 py-2";
-        }
+        el.className = tab === currentTab 
+          ? "flex flex-col items-center gap-1 text-orange-500 font-bold flex-1 py-2" 
+          : "flex flex-col items-center gap-1 text-gray-400 flex-1 py-2";
       });
 
       if (currentTab === 'home') {
+        // すでに検索欄があるなら全体を書き換えない（これで入力中のリセットを完全阻止）
+        if (document.getElementById('search-input')) {
+          updateBandListOnly();
+          return;
+        }
+
         main.innerHTML = `
           <div class="space-y-3">
             <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10">
-              <input type="text" id="search-input" placeholder="バンド名で検索..." class="w-full text-xs p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none"/>
+              <input type="text" id="search-input" placeholder="バンド名で検索..." class="w-full text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
             </div>
             <div id="band-list-container" class="grid gap-2"></div>
           </div>
@@ -174,10 +178,10 @@
           input.value = searchQuery;
           input.addEventListener('input', (e) => {
             searchQuery = e.target.value;
-            filterAndRenderBands();
+            updateBandListOnly();
           });
         }
-        filterAndRenderBands();
+        updateBandListOnly();
       }
 
       else if (currentTab === 'search') {
@@ -191,11 +195,11 @@
                 <div class="flex gap-1">${me.parts.map(p => `<span class="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-bold">${p}</span>`).join('')}</div>
               </div>
               <div>
-                <p class="text-xs text-gray-600 bg-gray-50 p-2 rounded">${me.bio || '未入力'}</p>
+                <p class="text-xs text-gray-600 bg-gray-50 p-2 rounded border border-dashed">${me.bio || '未入力'}</p>
               </div>
               <div>
                 <span class="text-[11px] font-bold text-gray-400 block mb-1">やりたいバンド (${myBands.length})</span>
-                <div class="flex flex-wrap gap-1">${myBands.map(b => `<span class="text-xs bg-orange-500 text-white px-2 py-1 rounded-full">🎵 ${b}</span>`).join('')}</div>
+                <div class="flex flex-wrap gap-1">${myBands.map(b => `<span class="text-xs bg-orange-500 text-white px-2.5 py-1 rounded-full">🎵 ${b}</span>`).join('')}</div>
               </div>
             </div>
           </div>
@@ -203,8 +207,7 @@
       }
 
       else if (currentTab === 'mypage') {
-        // マイページは最初に1回描画したら、タイマーで絶対に上書きしないようにする
-        if(document.getElementById('edit-name')) return;
+        if(document.getElementById('edit-name')) return; // 入力中の再描画を完全ガード
 
         const allParts = ['ボーカル', 'ギター', 'ベース', 'ドラム', 'キーボード'];
         let html = `
@@ -212,7 +215,7 @@
             <h3 class="font-bold text-gray-800 border-b pb-2 text-base">プロフィール設定</h3>
             <div>
               <label class="block text-xs font-bold text-gray-500 mb-1">部員名</label>
-              <input type="text" id="edit-name" class="w-full text-sm p-2.5 border rounded-lg" />
+              <input type="text" id="edit-name" class="w-full text-sm p-2.5 border rounded-lg focus:outline-none focus:border-orange-500" />
             </div>
             <div>
               <label class="block text-xs font-bold text-gray-500 mb-1">担当パート</label>
@@ -221,7 +224,7 @@
         allParts.forEach(p => {
           html += `
             <label class="flex items-center gap-2 text-xs bg-gray-50 p-2.5 rounded border cursor-pointer">
-              <input type="checkbox" name="edit-parts" value="${p}" class="w-4 h-4" /> ${p}
+              <input type="checkbox" name="edit-parts" value="${p}" class="w-4 h-4 accent-orange-500" /> ${p}
             </label>
           `;
         });
@@ -230,14 +233,13 @@
             </div>
             <div>
               <label class="block text-xs font-bold text-gray-500 mb-1">ひとことコメント</label>
-              <textarea id="edit-bio" class="w-full text-sm p-2.5 border rounded-lg h-20"></textarea>
+              <textarea id="edit-bio" class="w-full text-sm p-2.5 border rounded-lg h-20 focus:outline-none focus:border-orange-500"></textarea>
             </div>
-            <button id="save-profile-btn" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-sm shadow-md">設定を保存する</button>
+            <button id="save-profile-btn" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-sm shadow-md active:bg-orange-600">設定を保存する</button>
           </div>
         `;
         main.innerHTML = html;
 
-        // 現在の値を一度だけ正確にセットする
         document.getElementById('edit-name').value = me.name;
         document.getElementById('edit-bio').value = me.bio || '';
         document.querySelectorAll('input[name="edit-parts"]').forEach(cb => {
@@ -248,7 +250,8 @@
       }
     }
 
-    function filterAndRenderBands() {
+    // 検索欄を消さずに、リストのデータだけを安全に入れ替える処理
+    function updateBandListOnly() {
       const container = document.getElementById('band-list-container');
       if (!container) return;
 
@@ -262,7 +265,7 @@
       let html = "";
       filteredBands.forEach(b => {
         html += `
-          <div data-band-id="${b.id}" class="band-card bg-white border rounded-xl p-3 flex justify-between items-center shadow-sm cursor-pointer">
+          <div data-band-id="${b.id}" class="band-card bg-white border border-gray-100 rounded-xl p-3 flex justify-between items-center shadow-sm cursor-pointer hover:border-orange-200">
             <div class="flex-1 pr-2 overflow-hidden">
               <h4 class="font-bold text-gray-800 text-sm truncate">${b.name}</h4>
               ${b.isMyJoined ? `<span class="text-[9px] bg-orange-500 text-white px-1.5 py-0.2 rounded-full font-medium">選択中</span>` : ''}
@@ -305,6 +308,12 @@
 
     function openModal(bandId) {
       currentSelectedBandId = bandId;
+      updateModalOnly(bandId);
+      document.getElementById('band-modal').classList.remove('hidden');
+    }
+
+    // モーダルのデータだけを安全に同期する処理
+    function updateModalOnly(bandId) {
       const band = BANDS.find(b => b.id === bandId);
       if(!band) return;
       const members = allUsers.filter(u => u.bandIds && u.bandIds.includes(bandId));
@@ -316,7 +325,7 @@
       const btn = document.getElementById('modal-join-btn');
       if(isMyJoined) {
         btn.innerText = 'エントリーを解除する';
-        btn.className = 'w-full bg-gray-200 text-gray-600 py-3 rounded-xl font-bold text-sm';
+        btn.className = 'w-full bg-gray-200 text-gray-600 py-3 rounded-xl font-bold text-sm border';
       } else {
         btn.innerText = 'このバンドをやりたい！';
         btn.className = 'w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-sm';
@@ -325,13 +334,11 @@
 
       const listEl = document.getElementById('modal-member-list');
       listEl.innerHTML = members.length === 0 ? `<p class="text-xs text-gray-400 text-center py-4">誰も選択していません</p>` : members.map(m => `
-        <div class="p-2 bg-orange-50/50 rounded-lg border text-xs">
-          <div class="flex justify-between font-bold"><span>${m.name}</span><span class="text-orange-600">${m.parts.join(',')}</span></div>
+        <div class="p-2.5 bg-orange-50/50 rounded-xl border text-xs">
+          <div class="flex justify-between font-bold"><span>${m.name}</span><span class="text-orange-600 text-[10px]">${m.parts.join(',')}</span></div>
           <p class="text-gray-600 mt-0.5">${m.bio || ''}</p>
         </div>
       `).join('');
-      
-      document.getElementById('band-modal').classList.remove('hidden');
     }
 
     window.closeModal = function() {
@@ -345,8 +352,8 @@
       if (index > -1) me.bandIds.splice(index, 1);
       else me.bandIds.push(bandId);
       
-      render();
-      if (currentSelectedBandId) openModal(currentSelectedBandId);
+      if (currentTab === 'home') updateBandListOnly();
+      if (currentSelectedBandId) updateModalOnly(bandId);
       await saveMyDataToCloud();
     }
   </script>
