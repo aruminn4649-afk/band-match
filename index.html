@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>バンドマッチ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased">
+
+  <div class="w-full max-w-md mx-auto h-screen bg-gray-50 flex flex-col relative overflow-hidden shadow-2xl">
+    
+    <header class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10 flex justify-between items-center">
+      <h1 class="text-xl font-bold text-gray-800 flex items-center gap-1">
+        <span class="text-orange-500">🎸</span> バンドマッチ
+      </h1>
+      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">
+        Supabaseリアルタイム版
+      </div>
+    </header>
+
+    <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-24">
+      </main>
+
+    <div id="band-modal" class="absolute inset-0 bg-black/50 z-20 hidden flex items-end justify-center">
+      <div class="bg-white w-full rounded-t-2xl p-5 max-h-[80vh] overflow-y-auto space-y-4 shadow-2xl">
+        <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto -mt-2 mb-2"></div>
+        <div class="flex justify-between items-start">
+          <div>
+            <span class="text-[10px] font-bold text-orange-500 tracking-wider">BAND DETAILS</span>
+            <h3 id="modal-band-name" class="font-extrabold text-gray-800 text-xl mt-0.5">---</h3>
+          </div>
+          <div id="modal-band-count" class="bg-orange-500 text-white px-3 py-1 rounded-full font-black text-sm">🔥 0人</div>
+        </div>
+        
+        <button id="modal-join-btn" class="w-full py-3 rounded-xl font-bold text-sm shadow-md transition-all"></button>
+
+        <div class="border-t border-gray-100 pt-3">
+          <h4 class="font-bold text-xs text-gray-500 mb-2 flex items-center gap-1">
+            <i class="fa-solid fa-users text-orange-500"></i> エントリー中のメンバー
+          </h4>
+          <div id="modal-member-list" class="space-y-2 max-h-[35vh] overflow-y-auto pr-1"></div>
+        </div>
+        <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-semibold">閉じる</button>
+      </div>
+    </div>
+
+    <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 h-16 flex justify-around items-center z-10">
+      <button onclick="switchTab('home')" id="tab-home" class="flex flex-col items-center gap-1 text-orange-500 font-bold flex-1 py-2">
+        <i class="fa-solid fa-fire text-lg"></i><span class="text-[10px]">バンド一覧</span>
+      </button>
+      <button onclick="switchTab('search')" id="tab-search" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
+        <i class="fa-solid fa-magnifying-glass text-lg"></i><span class="text-[10px]">マイ登録状況</span>
+      </button>
+      <button onclick="switchTab('mypage')" id="tab-mypage" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
+        <i class="fa-solid fa-user text-lg"></i><span class="text-[10px]">マイページ</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    // -------------------------------------------------------------
+    // 【設定済み】あなた専用のSupabase接続用パラメータです
+    // -------------------------------------------------------------
+    const SUPABASE_URL = "https://vsontlupwrvmmthsovaz.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzb250bHVwd3J2bW10aHNvdmF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDQ3NTcsImV4cCI6MjA5NDUyMDc1N30.DTGclEZKMoFNAwZPPdNOMjEtDVVpw4s-D_jwRaL8MZc";
+
+    // Supabase初期化
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // --- 全98アーティストのマスターデータ ---
+    const BANDS = [
+      { id: "1", name: "YOASOBI コピー" }, { id: "2", name: "RADWIMPS コピー" }, { id: "3", name: "ずっと真夜中でいいのに。 コピー" },
+      { id: "4", name: "King Gnu コピー" }, { id: "5", name: "Official髭男dism コピー" }, { id: "6", name: "ヨルシカ コピー" },
+      { id: "7", name: "back number コピー" }, { id: "8", name: "スピッツ コピー" }, { id: "9", name: "BUMP OF CHICKEN コピー" },
+      { id: "10", name: "米津玄師 コピー" }, { id: "11", name: "サカナクション コピー" }, { id: "12", name: "ポルカドットスティングレイ コピー" },
+      { id: "13", name: "緑黄色社会 コピー" }, { id: "14", name: "My Hair is Bad コピー" }, { id: "15", name: "04 Limited Sazabys コピー" },
+      { id: "16", name: "[Alexandros] コピー" }, { id: "17", name: "UVERworld コピー" }, { id: "18", name: "SiM コピー" },
+      { id: "19", name: "BLUE ENCOUNT コピー" }, { id: "20", name: "SUPER BEAVER コピー" }, { id: "21", name: "sumika コピー" },
+      { id: "22", name: "Saucy Dog コピー" }, { id: "23", name: "マカロニえんぴつ コピー" }, { id: "24", name: "クリープハイプ コピー" },
+      { id: "25", name: "ゲスの極み乙女。 コピー" }, { id: "26", name: "indigo la End コピー" }, { id: "27", name: "KEYTALK コピー" },
+      { id: "28", name: "KANA-BOON コピー" }, { id: "29", name: "THE ORAL CIGARETTES コピー" }, { id: "30", name: "UNISON SQUARE GARDEN コピー" },
+      { id: "31", name: "フレデリック コピー" }, { id: "32", name: "ヤバイTシャツ屋さん コピー" }, { id: "33", name: "SHISHAMO コピー" },
+      { id: "34", name: "Mrs. GREEN APPLE コピー" }, { id: "35", name: "Novelbright コピー" }, { id: "36", name: "Vaundy コピー" },
+      { id: "37", name: "Eve コピー" }, { id: "38", name: "Aimer コピー" }, { id: "39", name: "LiSA コピー" },
+      { id: "40", name: "ASIAN KUNG-FU GENERATION コピー" }, { id: "41", name: "エレファントカシマシ コピー" }, { id: "42", name: "THE BACK HORN コピー" },
+      { id: "43", name: "ストレイテナー コピー" }, { id: "44", name: "9mm Parabellum Bullet コピー" }, { id: "45", name: "凛として時雨 コピー" },
+      { id: "46", name: "androp コピー" }, { id: "47", name: "Base Ball Bear コピー" }, { id: "48", name: "チャットモンチー コピー" },
+      { id: "49", name: "ねごと コピー" }, { id: "50", name: "キュウソネコカミ コピー" }, { id: "51", name: "打首獄門同好会 コピー" },
+      { id: "52", name: "東京事変 コピー" }, { id: "53", name: "椎名林檎 コピー" }, { id: "54", name: "フジファブリック コピー" },
+      { id: "55", name: "くるり コピー" }, { id: "56", name: "NUMBER GIRL コピー" }, { id: "57", name: "銀杏BOYZ コピー" },
+      { id: "58", name: "神聖かまってちゃん コピー" }, { id: "59", name: "amazarashi コピー" }, { id: "60", name: "羊文学 コピー" },
+      { id: "61", name: "Hump Back コピー" }, { id: "62", name: "ハンブレッダーズ コピー" }, { id: "63", name: "TETORA コピー" },
+      { id: "64", name: "kobore コピー" }, { id: "65", name: "the shes gone コピー" }, { id: "66", name: "Mr.ふぉるて コピー" },
+      { id: "67", name: "bokula. コピー" }, { id: "68", name: "reGretGirl コピー" }, { id: "69", name: "moon drop コピー" },
+      { id: "70", name: "w.o.d. コピー" }, { id: "71", name: "This is LAST コピー" }, { id: "72", name: "OKAMOTO'S コピー" },
+      { id: "73", name: "never young beach コピー" }, { id: "74", name: "Tempalay コピー" }, { id: "75", name: "Lucky Kilimanjaro コピー" },
+      { id: "76", name: "DISH// コピー" }, { id: "77", name: "ORANGE RANGE コピー" }, { id: "78", name: "Aqua Timez コピー" },
+      { id: "79", name: "GReeeeN コピー" }, { id: "80", name: "ONE OK ROCK コピー" },
+      { id: "81", name: "NEE コピー" }, { id: "82", name: "シンガーズハイ コピー" }, { id: "83", name: "PEOPLE 1 コピー" },
+      { id: "84", name: "マキシマム ザ ホルモン コピー" }, { id: "85", name: "相対性理論 コピー" },
+      { id: "86", name: "KUZIRA コピー" }, { id: "87", name: "鉄風東京 コピー" }, { id: "88", name: "ルサンチマン コピー" },
+      { id: "89", name: "文藝天国 コピー" }, { id: "90", name: "yonige コピー" }, { id: "91", name: "Chilli Beans. コピー" },
+      { id: "92", name: "ブランデー戦記 コピー" }, { id: "93", name: "chilldspot コピー" }, { id: "94", name: "TOMOO コピー" },
+      { id: "95", name: "Cody・Lee(李) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
+      { id: "98", name: "リーガルリリー コピー" }
+    ];
+
+    let myId = localStorage.getItem('k_on_my_id');
+    if (!myId) {
+      myId = 'user_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('k_on_my_id', myId);
+    }
+
+    let me = { id: myId, name: "未設定の部員", parts: ["ギター"], bio: "設定を変更して使ってください！", bandIds: [] };
+    let allUsers = []; 
+    let searchQuery = "";
+    let currentTab = 'home';
+    let currentSelectedBandId = null;
+
+    if(localStorage.getItem('k_on_me_v3')) {
+      const savedMe = JSON.parse(localStorage.getItem('k_on_me_v3'));
+      me.name = savedMe.name;
+      me.parts = savedMe.parts;
+      me.bio = savedMe.bio;
+    }
+
+    // データの読み込みとリアルタイムリフレッシュ
+    async function loadData() {
+      const { data, error } = await supabaseClient.from('users').select('*');
+      if (!error && data) {
+        allUsers = data;
+        const myCloudData = allUsers.find(u => u.id === myId);
+        if (myCloudData) {
+          me = myCloudData;
+          if (!me.bandIds) me.bandIds = [];
+        } else {
+          saveMyDataToCloud();
+        }
+        render();
+        if (currentSelectedBandId) {
+          openModal(currentSelectedBandId);
+        }
+      }
+    }
+
+    // 1.5秒ごとに自動でデータを同期
+    setInterval(loadData, 1500);
+    loadData();
+
+    async function saveMyDataToCloud() {
+      localStorage.setItem('k_on_me_v3', JSON.stringify({name: me.name, parts: me.parts, bio: me.bio}));
+      await supabaseClient.from('users').upsert(me);
+    }
+
+    function render() {
+      const main = document.getElementById('main-content');
+      
+      ['home', 'search', 'mypage'].forEach(tab => {
+        const el = document.getElementById(`tab-${tab}`);
+        if(tab === currentTab) {
+          el.classList.remove('text-gray-400');
+          el.classList.add('text-orange-500', 'font-bold');
+        } else {
+          el.classList.remove('text-orange-500', 'font-bold');
+          el.classList.add('text-gray-400');
+        }
+      });
+
+      if (currentTab === 'home') {
+        let html = `
+          <div class="space-y-3">
+            <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10">
+              <div class="relative flex items-center">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 text-gray-400 text-xs"></i>
+                <input type="text" id="search-input" placeholder="バンド名・アーティスト名で検索..." class="w-full text-xs pl-9 pr-8 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
+                <button id="clear-search-btn" class="absolute right-3 text-gray-400 hover:text-gray-600 text-xs hidden"><i class="fa-solid fa-circle-xmark"></i></button>
+              </div>
+            </div>
+            <div class="flex justify-between items-center text-[11px] text-gray-400 px-1">
+              <span id="match-count">該当: --件 / 全${BANDS.length}組</span>
+              <span>🔥 希望者順位</span>
+            </div>
+            <div id="band-list-container" class="grid gap-2 max-h-[calc(100vh-190px)] overflow-y-auto pr-0.5"></div>
+          </div>
+        `;
+        main.innerHTML = html;
+        
+        const input = document.getElementById('search-input');
+        input.value = searchQuery;
+        input.addEventListener('input', (e) => {
+          searchQuery = e.target.value;
+          filterAndRenderBands();
+        });
+
+        document.getElementById('clear-search-btn').addEventListener('click', () => {
+          searchQuery = "";
+          input.value = "";
+          filterAndRenderBands();
+        });
+
+        filterAndRenderBands();
+      }
+
+      else if (currentTab === 'search') {
+        const myBands = (me.bandIds || []).map(bId => BANDS.find(b => b.id === bId)?.name).filter(Boolean);
+        main.innerHTML = `
+          <div class="space-y-4">
+            <h3 class="font-bold text-gray-700 text-sm"><i class="fa-solid fa-circle-check text-orange-500"></i> あなたの現在の選択状況</h3>
+            <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-3">
+              <div class="flex justify-between items-center border-b pb-2">
+                <span class="font-bold text-gray-800 text-base">${me.name}</span>
+                <div class="flex gap-1 flex-wrap">${me.parts.map(p => `<span class="text-[9px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-bold">${p}</span>`).join('')}</div>
+              </div>
+              <div>
+                <span class="text-[10px] font-bold text-gray-400 block">プロフィール一言</span>
+                <p class="text-xs text-gray-600 mt-1 bg-gray-50 p-2.5 rounded border border-dashed">${me.bio || '未入力'}</p>
+              </div>
+              <div>
+                <span class="text-[10px] font-bold text-gray-400 block mb-1">あなたが「やりたい」バンド (${myBands.length})</span>
+                ${myBands.length === 0 ? `<p class="text-xs text-gray-400 py-1">選択中のバンドはありません。</p>` : `<div class="flex flex-wrap gap-1.5 max-h-[30vh] overflow-y-auto pr-1">${myBands.map(b => `<span class="text-xs bg-orange-500 text-white px-2.5 py-1 rounded-full font-medium">🎵 ${b}</span>`).join('')}</div>`}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      else if (currentTab === 'mypage') {
+        const allParts = ['ボーカル', 'ギター', 'ベース', 'ドラム', 'キーボード'];
+        let html = `
+          <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
+            <h3 class="font-bold text-gray-800 border-b pb-2 text-base">プロフィール設定</h3>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1">部員名</label>
+              <input type="text" id="edit-name" value="${me.name}" class="w-full text-sm p-2.5 border rounded-lg focus:outline-none focus:border-orange-500" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1">担当パート</label>
+              <div class="grid grid-cols-2 gap-2">
+        `;
+        allParts.forEach(p => {
+          html += `
+            <label class="flex items-center gap-2 text-xs bg-gray-50 p-2.5 rounded border cursor-pointer hover:bg-orange-50/50">
+              <input type="checkbox" name="edit-parts" value="${p}" ${me.parts.includes(p) ? 'checked' : ''} class="accent-orange-500 w-4 h-4" /> ${p}
+            </label>
+          `;
+        });
+        html += `
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1">ひとことコメント</label>
+              <textarea id="edit-bio" class="w-full text-sm p-2.5 border rounded-lg h-20 focus:outline-none focus:border-orange-500" placeholder="掛け持ち希望など何でも">${me.bio || ''}</textarea>
+            </div>
+            <button id="save-profile-btn" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-sm shadow-md active:bg-orange-600 transition-colors">設定を保存する</button>
+          </div>
+        `;
+        main.innerHTML = html;
+        document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
+      }
+    }
+
+    function filterAndRenderBands() {
+      const container = document.getElementById('band-list-container');
+      const clearBtn = document.getElementById('clear-search-btn');
+      const countLabel = document.getElementById('match-count');
+      if (!container) return;
+
+      if (searchQuery) clearBtn.classList.remove('hidden');
+      else clearBtn.classList.add('hidden');
+
+      const sortedBands = BANDS.map(b => {
+        const matchingUsers = allUsers.filter(u => u.bandIds && u.bandIds.includes(b.id));
+        return { ...b, count: matchingUsers.length, isMyJoined: me.bandIds && me.bandIds.includes(b.id) };
+      }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+      const filteredBands = sortedBands.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      countLabel.innerText = `該当: ${filteredBands.length}件 / 全${BANDS.length}組`;
+
+      let html = "";
+      if (filteredBands.length === 0) {
+        html = `<p class="text-center text-xs text-gray-400 py-8">「${searchQuery}」に一致するバンドはありません。</p>`;
+      } else {
+        filteredBands.forEach(b => {
+          html += `
+            <div data-band-id="${b.id}" class="band-card bg-white border border-gray-100 rounded-xl p-3 flex justify-between items-center shadow-sm active:scale-[0.99] transition-transform cursor-pointer hover:border-orange-200">
+              <div class="flex-1 pr-2 overflow-hidden">
+                <h4 class="font-bold text-gray-800 text-sm truncate">${b.name}</h4>
+                ${b.isMyJoined ? `<div class="mt-0.5"><span class="text-[8px] bg-orange-500 text-white px-1.5 py-0.2 rounded-full font-medium"><i class="fa-solid fa-check"></i> 選択中</span></div>` : ''}
+              </div>
+              <div class="bg-orange-50 px-2.5 py-1 rounded-lg text-center min-w-[55px]">
+                <span class="text-orange-600 font-black text-xs block">🔥 ${b.count}人</span>
+              </div>
+            </div>
+          `;
+        });
+      }
+      container.innerHTML = html;
+
+      container.querySelectorAll('.band-card').forEach(card => {
+        card.addEventListener('click', () => openModal(card.dataset.bandId));
+      });
+    }
+
+    window.switchTab = function(tab) {
+      currentTab = tab;
+      render();
+    }
+
+    async function saveProfile() {
+      const name = document.getElementById('edit-name').value;
+      const bio = document.getElementById('edit-bio').value;
+      const checkboxes = document.querySelectorAll('input[name="edit-parts"]:checked');
+      const parts = Array.from(checkboxes).map(cb => cb.value);
+
+      if(!name.trim()) return alert('名前を入力してください');
+      if(parts.length === 0) return alert('パートを選択してください');
+
+      me.name = name;
+      me.parts = parts;
+      me.bio = bio;
+
+      await saveMyDataToCloud();
+      alert('保存しました！');
+      switchTab('home');
+    }
+
+    function openModal(bandId) {
+      currentSelectedBandId = bandId;
+      const band = BANDS.find(b => b.id === bandId);
+      const members = allUsers.filter(u => u.bandIds && u.bandIds.includes(bandId));
+      const isMyJoined = me.bandIds && me.bandIds.includes(bandId);
+
+      document.getElementById('modal-band-name').innerText = band.name;
+      document.getElementById('modal-band-count').innerText = `🔥 ${members.length}人`;
+      
+      const btn = document.getElementById('modal-join-btn');
+      if(isMyJoined) {
+        btn.innerText = 'エントリーを解除する';
+        btn.className = 'w-full py-3 rounded-xl font-bold text-sm shadow-md transition-all bg-gray-100 text-gray-500 border border-gray-300';
+      } else {
+        btn.innerText = 'このバンドをやりたい！';
+        btn.className = 'w-full py-3 rounded-xl font-bold text-sm shadow-md transition-all bg-orange-500 text-white hover:bg-orange-600';
+      }
+      btn.onclick = () => toggleJoin(bandId);
+
+      const listEl = document.getElementById('modal-member-list');
+      if(members.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">誰も選択していません。</p>`;
+      } else {
+        listEl.innerHTML = members.map(m => `
+          <div class="p-3 bg-orange-50/30 rounded-xl border border-orange-200">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-xs text-gray-800">${m.name} ${m.id === myId ? '(あなた)' : ''}</span>
+              <div class="flex gap-1">
+                ${m.parts.map(p => `<span class="text-[8px] bg-orange-500 text-white px-1.5 py-0.5 rounded font-bold">${p}</span>`).join('')}
+              </div>
+            </div>
+            <p class="text-[11px] text-gray-600 mt-1">💬 ${m.bio || ''}</p>
+          </div>
+        `).join('');
+      }
+      document.getElementById('band-modal').classList.remove('hidden');
+    }
+
+    window.closeModal = function() {
+      document.getElementById('band-modal').classList.add('hidden');
+      currentSelectedBandId = null;
+    }
+
+    async function toggleJoin(bandId) {
+      if (!me.bandIds) me.bandIds = [];
+      const index = me.bandIds.indexOf(bandId);
+      if (index > -1) {
+        me.bandIds.splice(index, 1);
+      } else {
+        me.bandIds.push(bandId);
+      }
+      await saveMyDataToCloud();
+    }
+  </script>
+</body>
+</html>
