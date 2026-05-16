@@ -72,7 +72,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // あなた専用の接続パラメータを設定済みです
     const SUPABASE_URL = "https://vsontlupwrvmmthsovaz.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzb250bHVwd3J2bW10aHNvdmF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDQ3NTcsImV4cCI6MjA5NDUyMDc1N30.DTGclEZKMoFNAwZPPdNOMjEtDVVpw4s-D_jwRaL8MZc";
 
@@ -135,6 +134,9 @@
     }
 
     async function loadData() {
+      // マイページタブを開いているときは、入力の邪魔をしないように読み込みを完全停止する
+      if (currentTab === 'mypage') return;
+
       try {
         const { data, error } = await supabaseClient.from('users').select('*');
         if (!error && data) {
@@ -344,6 +346,8 @@
       await saveMyDataToCloud();
       alert('保存しました！');
       switchTab('home');
+      // 保存が終わったら自動読み込みを再開させるために一度データをロードする
+      loadData();
     }
 
     function openModal(bandId) {
