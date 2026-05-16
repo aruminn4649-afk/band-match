@@ -30,7 +30,7 @@
     </header>
 
     <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-24">
-      </main>
+    </main>
 
     <div id="band-modal" class="absolute inset-0 bg-black/50 z-20 hidden flex items-end justify-center">
       <div class="bg-white w-full rounded-t-2xl p-5 max-h-[80vh] overflow-y-auto space-y-4 shadow-2xl">
@@ -72,16 +72,12 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    // -------------------------------------------------------------
-    // 【設定済み】あなた専用のSupabase接続用パラメータです
-    // -------------------------------------------------------------
+    // あなた専用の接続パラメータを設定済みです
     const SUPABASE_URL = "https://vsontlupwrvmmthsovaz.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzb250bHVwd3J2bW10aHNvdmF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDQ3NTcsImV4cCI6MjA5NDUyMDc1N30.DTGclEZKMoFNAwZPPdNOMjEtDVVpw4s-D_jwRaL8MZc";
 
-    // Supabase初期化
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- 全98アーティストのマスターデータ ---
     const BANDS = [
       { id: "1", name: "YOASOBI コピー" }, { id: "2", name: "RADWIMPS コピー" }, { id: "3", name: "ずっと真夜中でいいのに。 コピー" },
       { id: "4", name: "King Gnu コピー" }, { id: "5", name: "Official髭男dism コピー" }, { id: "6", name: "ヨルシカ コピー" },
@@ -138,26 +134,26 @@
       me.bio = savedMe.bio;
     }
 
-    // データの読み込みとリアルタイムリフレッシュ
     async function loadData() {
-      const { data, error } = await supabaseClient.from('users').select('*');
-      if (!error && data) {
-        allUsers = data;
-        const myCloudData = allUsers.find(u => u.id === myId);
-        if (myCloudData) {
-          me = myCloudData;
-          if (!me.bandIds) me.bandIds = [];
-        } else {
-          saveMyDataToCloud();
+      try {
+        const { data, error } = await supabaseClient.from('users').select('*');
+        if (!error && data) {
+          allUsers = data;
+          const myCloudData = allUsers.find(u => u.id === myId);
+          if (myCloudData) {
+            me = myCloudData;
+            if (!me.bandIds) me.bandIds = [];
+          } else {
+            saveMyDataToCloud();
+          }
+          render();
+          if (currentSelectedBandId) {
+            openModal(currentSelectedBandId);
+          }
         }
-        render();
-        if (currentSelectedBandId) {
-          openModal(currentSelectedBandId);
-        }
-      }
+      } catch (e) { console.error(e); }
     }
 
-    // 1.5秒ごとに自動でデータを同期
     setInterval(loadData, 1500);
     loadData();
 
@@ -168,9 +164,11 @@
 
     function render() {
       const main = document.getElementById('main-content');
+      if (!main) return;
       
       ['home', 'search', 'mypage'].forEach(tab => {
         const el = document.getElementById(`tab-${tab}`);
+        if(!el) return;
         if(tab === currentTab) {
           el.classList.remove('text-gray-400');
           el.classList.add('text-orange-500', 'font-bold');
@@ -200,17 +198,22 @@
         main.innerHTML = html;
         
         const input = document.getElementById('search-input');
-        input.value = searchQuery;
-        input.addEventListener('input', (e) => {
-          searchQuery = e.target.value;
-          filterAndRenderBands();
-        });
+        if(input) {
+          input.value = searchQuery;
+          input.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            filterAndRenderBands();
+          });
+        }
 
-        document.getElementById('clear-search-btn').addEventListener('click', () => {
-          searchQuery = "";
-          input.value = "";
-          filterAndRenderBands();
-        });
+        const cBtn = document.getElementById('clear-search-btn');
+        if(cBtn) {
+          cBtn.addEventListener('click', () => {
+            searchQuery = "";
+            if(input) input.value = "";
+            filterAndRenderBands();
+          });
+        }
 
         filterAndRenderBands();
       }
@@ -269,7 +272,8 @@
           </div>
         `;
         main.innerHTML = html;
-        document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
+        const sBtn = document.getElementById('save-profile-btn');
+        if(sBtn) sBtn.addEventListener('click', saveProfile);
       }
     }
 
@@ -279,8 +283,8 @@
       const countLabel = document.getElementById('match-count');
       if (!container) return;
 
-      if (searchQuery) clearBtn.classList.remove('hidden');
-      else clearBtn.classList.add('hidden');
+      if (searchQuery && clearBtn) clearBtn.classList.remove('hidden');
+      else if (clearBtn) clearBtn.classList.add('hidden');
 
       const sortedBands = BANDS.map(b => {
         const matchingUsers = allUsers.filter(u => u.bandIds && u.bandIds.includes(b.id));
@@ -288,7 +292,7 @@
       }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
       const filteredBands = sortedBands.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
-      countLabel.innerText = `該当: ${filteredBands.length}件 / 全${BANDS.length}組`;
+      if(countLabel) countLabel.innerText = `該当: ${filteredBands.length}件 / 全${BANDS.length}組`;
 
       let html = "";
       if (filteredBands.length === 0) {
@@ -321,8 +325,12 @@
     }
 
     async function saveProfile() {
-      const name = document.getElementById('edit-name').value;
-      const bio = document.getElementById('edit-bio').value;
+      const nameEl = document.getElementById('edit-name');
+      const bioEl = document.getElementById('edit-bio');
+      if(!nameEl || !bioEl) return;
+
+      const name = nameEl.value;
+      const bio = bioEl.value;
       const checkboxes = document.querySelectorAll('input[name="edit-parts"]:checked');
       const parts = Array.from(checkboxes).map(cb => cb.value);
 
@@ -341,6 +349,7 @@
     function openModal(bandId) {
       currentSelectedBandId = bandId;
       const band = BANDS.find(b => b.id === bandId);
+      if(!band) return;
       const members = allUsers.filter(u => u.bandIds && u.bandIds.includes(bandId));
       const isMyJoined = me.bandIds && me.bandIds.includes(bandId);
 
