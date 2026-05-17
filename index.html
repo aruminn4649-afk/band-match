@@ -98,7 +98,7 @@
       { id: "86", name: "KUZIRA コピー" }, { id: "87", name: "鉄風東京 コピー" }, { id: "88", name: "ルサンチマン コピー" },
       { id: "89", name: "文藝天国 コピー" }, { id: "90", name: "yonige コピー" }, { id: "91", name: "Chilli Beans. コピー" },
       { id: "92", name: "ブランデー戦記 コピー" }, { id: "93", name: "chilldspot コピー" }, { id: "94", name: "TOMOO コピー" },
-      { id: "95", name: "Cody・Lee(理) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
+      { id: "95", name: "Cody・Lee(李) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
       { id: "98", name: "リーガルリリー コピー" }, 
       { id: "101", name: "Nirvana コピー" }, { id: "102", name: "Green Day コピー" }, { id: "103", name: "Red Hot Chili Peppers コピー" },
       { id: "104", name: "Oasis コピー" }, { id: "105", name: "Radiohead コピー" }, { id: "106", name: "Coldplay コピー" },
@@ -131,10 +131,10 @@
     let userSearchQuery = "";
     let currentTab = 'home';
     let currentSelectedBandId = null;
-    let isSaving = false; // 保存中ロックフラグを追加
+    let isSaving = false;
 
     async function loadData() {
-      if (isSaving) return; // 保存処理中は読み込みによるデータ上書きをブロック
+      if (isSaving) return;
       try {
         const { data, error } = await supabaseClient.from('users').select('*');
         if (!error && data) {
@@ -162,10 +162,9 @@
     loadData();
 
     async function saveMyDataToCloud() {
-      isSaving = true; // ロック開始
+      isSaving = true;
       localStorage.setItem('k_on_me_v9', JSON.stringify(me));
       
-      // ローカルデータを現在の全ユーザーリストに即座に反映（画面表示を最速で変える）
       const myIndex = allUsers.findIndex(u => u.id === myId);
       const tempMyCloudData = {
         id: me.id,
@@ -179,14 +178,13 @@
       } else {
         allUsers.push(tempMyCloudData);
       }
-      refreshUI(); // 即座に描画更新
+      refreshUI();
 
       try {
         await supabaseClient.from('users').upsert(tempMyCloudData);
       } catch(e) { 
         console.error(e); 
       } finally {
-        // 保存完了後に少し間を置いてロック解除
         setTimeout(() => { isSaving = false; }, 500);
       }
     }
@@ -329,21 +327,26 @@
       });
     }
 
+    // 【アップデート】名前が初期のままのユーザー（未設定の部員）や空欄の人を一覧から非表示にする
     function updateUserListOnly() {
       const container = document.getElementById('user-list-container');
       if (!container) return;
 
       const filteredUsers = allUsers.filter(u => {
+        const userName = (u.name || "").trim();
+        // 名前が空欄、または「未設定の部員」の場合は名簿に表示しない
+        if (!userName || userName === "未設定の部員") return false;
+
         const userBio = u.bio || "";
         const userGrade = u.grade || (userBio.match(/【(.*?)】/) ? userBio.match(/【(.*?)】/)[1] : "新入生");
-        const nameMatch = (u.name || "").toLowerCase().includes(userSearchQuery.toLowerCase());
+        const nameMatch = userName.toLowerCase().includes(userSearchQuery.toLowerCase());
         const gradeMatch = userGrade.toLowerCase().includes(userSearchQuery.toLowerCase());
         const partsMatch = (u.parts || []).some(p => p.toLowerCase().includes(userSearchQuery.toLowerCase()));
         return nameMatch || gradeMatch || partsMatch;
       });
 
       if (filteredUsers.length === 0) {
-        container.innerHTML = `<p class="text-center text-xs text-gray-400 py-8">見つかりません</p>`;
+        container.innerHTML = `<p class="text-center text-xs text-gray-400 py-8">設定済みの部員が見つかりません</p>`;
         return;
       }
 
@@ -398,7 +401,7 @@
       const checkboxes = document.querySelectorAll('input[name="edit-parts"]:checked');
       const parts = Array.from(checkboxes).map(cb => cb.value);
 
-      if(!name.trim()) return alert('名前を入力してください');
+      if(!name.trim() || name.trim() === "未設定の部員") return alert('有効な名前を入力してください');
       if(parts.length === 0) return alert('パートを選択してください');
 
       me.name = name;
@@ -465,13 +468,10 @@
       if (index > -1) me.bandIds.splice(index, 1);
       else me.bandIds.push(bandId);
       
-      // 画面更新を待たずに最速でローカルの表示を変更する
       refreshUI();
-      // クラウドへ安全に送信（同期エラーを完全ブロック）
       await saveMyDataToCloud();
     }
     
-    // 初回レンダリング
     render();
   </script>
 </body>
