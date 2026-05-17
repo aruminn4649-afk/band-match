@@ -98,7 +98,7 @@
       { id: "86", name: "KUZIRA コピー" }, { id: "87", name: "鉄風東京 コピー" }, { id: "88", name: "ルサンチマン コピー" },
       { id: "89", name: "文藝天国 コピー" }, { id: "90", name: "yonige コピー" }, { id: "91", name: "Chilli Beans. コピー" },
       { id: "92", name: "ブランデー戦記 コピー" }, { id: "93", name: "chilldspot コピー" }, { id: "94", name: "TOMOO コピー" },
-      { id: "95", name: "Cody・Lee(李) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
+      { id: "95", name: "Cody・Lee(理) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
       { id: "98", name: "リーガルリリー コピー" }, 
       { id: "101", name: "Nirvana コピー" }, { id: "102", name: "Green Day コピー" }, { id: "103", name: "Red Hot Chili Peppers コピー" },
       { id: "104", name: "Oasis コピー" }, { id: "105", name: "Radiohead コピー" }, { id: "106", name: "Coldplay コピー" },
@@ -121,13 +121,15 @@
     let myId = localStorage.getItem('k_on_my_id') || 'user_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('k_on_my_id', myId);
 
-    let me = { id: myId, name: "未設定の部員", parts: ["ギター"], bio: "設定を変更して使ってください！", bandIds: [] };
-    if(localStorage.getItem('k_on_me_v6')) {
-      me = JSON.parse(localStorage.getItem('k_on_me_v6'));
+    // デフォルトに学年「grade」を追加
+    let me = { id: myId, name: "未設定の部員", grade: "新入生", parts: ["ギター"], bio: "設定を変更して使ってください！", bandIds: [] };
+    if(localStorage.getItem('k_on_me_v7')) {
+      me = JSON.parse(localStorage.getItem('k_on_me_v7'));
     }
 
     let allUsers = []; 
     let searchQuery = "";
+    let userSearchQuery = ""; // 部員検索用の状態
     let currentTab = 'home';
     let currentSelectedBandId = null;
 
@@ -154,7 +156,7 @@
     loadData();
 
     async function saveMyDataToCloud() {
-      localStorage.setItem('k_on_me_v6', JSON.stringify(me));
+      localStorage.setItem('k_on_me_v7', JSON.stringify(me));
       try {
         await supabaseClient.from('users').upsert(me);
       } catch(e) { console.error(e); }
@@ -197,14 +199,23 @@
       }
 
       else if (currentTab === 'search') {
+        // 部員検索用の入力欄を追加
         main.innerHTML = `
           <div class="space-y-3">
-            <h3 class="font-bold text-gray-700 text-sm flex items-center gap-1">
-              <i class="fa-solid fa-users text-orange-500"></i> 部員プロフィール一覧 (${allUsers.length}人)
-            </h3>
+            <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10 space-y-2">
+              <input type="text" id="user-search-input" placeholder="名前・学年・パートで部員を検索..." class="w-full text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
+            </div>
             <div id="user-list-container" class="space-y-3"></div>
           </div>
         `;
+        const userInput = document.getElementById('user-search-input');
+        if(userInput) {
+          userInput.value = userSearchQuery;
+          userInput.addEventListener('input', (e) => {
+            userSearchQuery = e.target.value;
+            updateUserListOnly();
+          });
+        }
         updateUserListOnly();
       }
 
@@ -212,13 +223,24 @@
         if(document.getElementById('edit-name')) return;
 
         const allParts = ['ボーカル', 'ギター', 'ベース', 'ドラム', 'キーボード'];
+        const grades = ['新入生', '2年生', '3年生', '4年生以上'];
+        
         let html = `
           <div class="bg-white p-5 rounded-xl border shadow-sm space-y-4">
             <h3 class="font-bold text-gray-800 border-b pb-2 text-base">プロフィール設定</h3>
+            
             <div>
               <label class="block text-xs font-bold text-gray-500 mb-1">部員名</label>
               <input type="text" id="edit-name" class="w-full text-sm p-2.5 border rounded-lg focus:outline-none focus:border-orange-500" />
             </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1">学年</label>
+              <select id="edit-grade" class="w-full text-sm p-2.5 bg-white border rounded-lg focus:outline-none focus:border-orange-500">
+                ${grades.map(g => `<option value="${g}">${g}</option>`).join('')}
+              </select>
+            </div>
+
             <div>
               <label class="block text-xs font-bold text-gray-500 mb-1">担当パート</label>
               <div class="grid grid-cols-2 gap-2">
@@ -243,6 +265,7 @@
         main.innerHTML = html;
 
         document.getElementById('edit-name').value = me.name;
+        document.getElementById('edit-grade').value = me.grade || "新入生";
         document.getElementById('edit-bio').value = me.bio || '';
         document.querySelectorAll('input[name="edit-parts"]').forEach(cb => {
           if(me.parts.includes(cb.value)) cb.checked = true;
@@ -284,25 +307,44 @@
       });
     }
 
-    // 【新規機能】部員名簿リストを安全に同期・描画する
+    // 【アップデート】部員名簿リストで名前・学年・パートを検索・フィルタリングできるように拡張
     function updateUserListOnly() {
       const container = document.getElementById('user-list-container');
       if (!container) return;
 
-      if (allUsers.length === 0) {
-        container.innerHTML = `<p class="text-center text-xs text-gray-400 py-8">まだ誰も登録していません</p>`;
+      // 検索キーワードにヒットする部員を絞り込む
+      const filteredUsers = allUsers.filter(u => {
+        const nameMatch = (u.name || "").toLowerCase().includes(userSearchQuery.toLowerCase());
+        const gradeMatch = (u.grade || "新入生").toLowerCase().includes(userSearchQuery.toLowerCase());
+        const partsMatch = (u.parts || []).some(p => p.toLowerCase().includes(userSearchQuery.toLowerCase()));
+        return nameMatch || gradeMatch || partsMatch;
+      });
+
+      if (filteredUsers.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-gray-400 py-8">見つかりません</p>`;
         return;
       }
 
       let html = "";
-      allUsers.forEach(u => {
+      filteredUsers.forEach(u => {
         const userBands = (u.bandIds || []).map(bId => BANDS.find(b => b.id === bId)?.name).filter(Boolean);
         const isItMe = u.id === myId;
+        const userGrade = u.grade || "新入生";
+
+        // 学年の色分け用スタイル
+        let gradeBadgeColor = "bg-green-100 text-green-700";
+        if(userGrade === "2年生") gradeBadgeColor = "bg-blue-100 text-blue-700";
+        if(userGrade === "3年生") gradeBadgeColor = "bg-purple-100 text-purple-700";
+        if(userGrade === "4年生以上") gradeBadgeColor = "bg-gray-200 text-gray-700";
 
         html += `
           <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2.5 ${isItMe ? 'border-orange-300 bg-orange-50/10' : ''}">
             <div class="flex justify-between items-center border-b pb-1.5">
-              <span class="font-bold text-gray-800 text-sm">${u.name} ${isItMe ? '<span class="text-[10px] text-orange-500 font-normal ml-1">(あなた)</span>' : ''}</span>
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-gray-800 text-sm">${u.name}</span>
+                <span class="text-[9px] ${gradeBadgeColor} px-1.5 py-0.5 rounded-full font-black">${userGrade}</span>
+                ${isItMe ? '<span class="text-[10px] text-orange-500 font-normal">(あなた)</span>' : ''}
+              </div>
               <div class="flex gap-1">${(u.parts || []).map(p => `<span class="text-[9px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded font-bold">${p}</span>`).join('')}</div>
             </div>
             <p class="text-xs text-gray-600 bg-gray-50/80 p-2 rounded">${u.bio || 'コメントなし'}</p>
@@ -327,6 +369,7 @@
 
     async function saveProfile() {
       const name = document.getElementById('edit-name').value;
+      const grade = document.getElementById('edit-grade').value;
       const bio = document.getElementById('edit-bio').value;
       const checkboxes = document.querySelectorAll('input[name="edit-parts"]:checked');
       const parts = Array.from(checkboxes).map(cb => cb.value);
@@ -335,6 +378,7 @@
       if(parts.length === 0) return alert('パートを選択してください');
 
       me.name = name;
+      me.grade = grade;
       me.parts = parts;
       me.bio = bio;
 
@@ -371,7 +415,10 @@
       const listEl = document.getElementById('modal-member-list');
       listEl.innerHTML = members.length === 0 ? `<p class="text-xs text-gray-400 text-center py-4">誰も選択していません</p>` : members.map(m => `
         <div class="p-2.5 bg-orange-50/50 rounded-xl border text-xs">
-          <div class="flex justify-between font-bold"><span>${m.name}</span><span class="text-orange-600 text-[10px]">${(m.parts || []).join(',')}</span></div>
+          <div class="flex justify-between font-bold">
+            <span>${m.name} <span class="text-[9px] text-gray-400 font-normal">(${m.grade || '新入生'})</span></span>
+            <span class="text-orange-600 text-[10px]">${(m.parts || []).join(',')}</span>
+          </div>
           <p class="text-gray-600 mt-0.5">${m.bio || ''}</p>
         </div>
       `).join('');
@@ -393,7 +440,6 @@
       await saveMyDataToCloud();
     }
     
-    // 初回読み込み時の自動表示発動
     setTimeout(render, 100);
   </script>
 </body>
