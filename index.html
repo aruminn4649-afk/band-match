@@ -98,7 +98,7 @@
       { id: "86", name: "KUZIRA コピー" }, { id: "87", name: "鉄風東京 コピー" }, { id: "88", name: "ルサンチマン コピー" },
       { id: "89", name: "文藝天国 コピー" }, { id: "90", name: "yonige コピー" }, { id: "91", name: "Chilli Beans. コピー" },
       { id: "92", name: "ブランデー戦記 コピー" }, { id: "93", name: "chilldspot コピー" }, { id: "94", name: "TOMOO コピー" },
-      { id: "95", name: "Cody・Lee(李) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
+      { id: "95", name: "Cody・Lee(理) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
       { id: "98", name: "リーガルリリー コピー" }, 
       { id: "101", name: "Nirvana コピー" }, { id: "102", name: "Green Day コピー" }, { id: "103", name: "Red Hot Chili Peppers コピー" },
       { id: "104", name: "Oasis コピー" }, { id: "105", name: "Radiohead コピー" }, { id: "106", name: "Coldplay コピー" },
@@ -121,10 +121,9 @@
     let myId = localStorage.getItem('k_on_my_id') || 'user_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('k_on_my_id', myId);
 
-    // バージョン識別を更新して古い一時データを確実にクリア
     let me = { id: myId, name: "未設定の部員", grade: "新入生", parts: ["ギター"], bio: "設定を変更して使ってください！", bandIds: [] };
-    if(localStorage.getItem('k_on_me_v8_fix')) {
-      me = JSON.parse(localStorage.getItem('k_on_me_v8_fix'));
+    if(localStorage.getItem('k_on_me_v9')) {
+      me = JSON.parse(localStorage.getItem('k_on_me_v9'));
     }
 
     let allUsers = []; 
@@ -132,8 +131,10 @@
     let userSearchQuery = "";
     let currentTab = 'home';
     let currentSelectedBandId = null;
+    let isSaving = false; // 保存中ロックフラグを追加
 
     async function loadData() {
+      if (isSaving) return; // 保存処理中は読み込みによるデータ上書きをブロック
       try {
         const { data, error } = await supabaseClient.from('users').select('*');
         if (!error && data) {
@@ -141,35 +142,53 @@
           const myCloudData = allUsers.find(u => u.id === myId);
           if (myCloudData) {
             me.bandIds = myCloudData.bandIds || [];
+            localStorage.setItem('k_on_me_v9', JSON.stringify(me));
           }
-          if (currentTab === 'home') {
-            updateBandListOnly();
-          } else if (currentTab === 'search') {
-            updateUserListOnly();
-          }
-          if (currentSelectedBandId) updateModalOnly(currentSelectedBandId);
+          refreshUI();
         }
       } catch (e) { console.error(e); }
     }
 
-    setInterval(loadData, 2000);
+    function refreshUI() {
+      if (currentTab === 'home') {
+        updateBandListOnly();
+      } else if (currentTab === 'search') {
+        updateUserListOnly();
+      }
+      if (currentSelectedBandId) updateModalOnly(currentSelectedBandId);
+    }
+
+    setInterval(loadData, 3000);
     loadData();
 
-    // 【修正箇所】Supabaseの制限にかかわらず、確実に成功するデータ送信方法に変更
     async function saveMyDataToCloud() {
-      localStorage.setItem('k_on_me_v8_fix', JSON.stringify(me));
+      isSaving = true; // ロック開始
+      localStorage.setItem('k_on_me_v9', JSON.stringify(me));
+      
+      // ローカルデータを現在の全ユーザーリストに即座に反映（画面表示を最速で変える）
+      const myIndex = allUsers.findIndex(u => u.id === myId);
+      const tempMyCloudData = {
+        id: me.id,
+        name: me.name,
+        parts: me.parts,
+        bio: me.bio ? `${me.bio} 【${me.grade}】` : `【${me.grade}】`,
+        bandIds: me.bandIds
+      };
+      if (myIndex > -1) {
+        allUsers[myIndex] = tempMyCloudData;
+      } else {
+        allUsers.push(tempMyCloudData);
+      }
+      refreshUI(); // 即座に描画更新
+
       try {
-        // 学年カラムがSupabase側になくてもエラーで止まらないよう、セーフティをかけながら送信
-        const sendData = {
-          id: me.id,
-          name: me.name,
-          parts: me.parts,
-          bio: me.bio ? `${me.bio} 【${me.grade}】` : `【${me.grade}】`, // コメント欄に学年を安全に埋め込む形にしてエラーを完全回避
-          bandIds: me.bandIds,
-          grade: me.grade // 後方互換のため一応残す
-        };
-        await supabaseClient.from('users').upsert(sendData);
-      } catch(e) { console.error(e); }
+        await supabaseClient.from('users').upsert(tempMyCloudData);
+      } catch(e) { 
+        console.error(e); 
+      } finally {
+        // 保存完了後に少し間を置いてロック解除
+        setTimeout(() => { isSaving = false; }, 500);
+      }
     }
 
     function render() {
@@ -185,10 +204,6 @@
       });
 
       if (currentTab === 'home') {
-        if (document.getElementById('search-input')) {
-          updateBandListOnly();
-          return;
-        }
         main.innerHTML = `
           <div class="space-y-3">
             <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10">
@@ -229,8 +244,6 @@
       }
 
       else if (currentTab === 'mypage') {
-        if(document.getElementById('edit-name')) return;
-
         const allParts = ['ボーカル', 'ギター', 'ベース', 'ドラム', 'キーボード'];
         const grades = ['新入生', '2年生', '3年生', '4年生以上'];
         
@@ -312,7 +325,7 @@
       container.innerHTML = html || `<p class="text-center text-xs text-gray-400 py-8">見つかりません</p>`;
 
       container.querySelectorAll('.band-card').forEach(card => {
-        card.addEventListener('click', () => openModal(card.dataset.bandId));
+        card.onclick = () => openModal(card.dataset.bandId);
       });
     }
 
@@ -321,7 +334,6 @@
       if (!container) return;
 
       const filteredUsers = allUsers.filter(u => {
-        // コメント欄に隠された学年テキストも検索対象にする
         const userBio = u.bio || "";
         const userGrade = u.grade || (userBio.match(/【(.*?)】/) ? userBio.match(/【(.*?)】/)[1] : "新入生");
         const nameMatch = (u.name || "").toLowerCase().includes(userSearchQuery.toLowerCase());
@@ -340,7 +352,6 @@
         const userBands = (u.bandIds || []).map(bId => BANDS.find(b => b.id === bId)?.name).filter(Boolean);
         const isItMe = u.id === myId;
         
-        // 学年の安全なパース
         const userBioRaw = u.bio || "";
         const userGrade = u.grade || (userBioRaw.match(/【(.*?)】/) ? userBioRaw.match(/【(.*?)】/)[1] : "新入生");
         const cleanBio = userBioRaw.replace(/【.*?】/, "").trim();
@@ -454,12 +465,14 @@
       if (index > -1) me.bandIds.splice(index, 1);
       else me.bandIds.push(bandId);
       
-      if (currentTab === 'home') updateBandListOnly();
-      if (currentSelectedBandId) updateModalOnly(bandId);
+      // 画面更新を待たずに最速でローカルの表示を変更する
+      refreshUI();
+      // クラウドへ安全に送信（同期エラーを完全ブロック）
       await saveMyDataToCloud();
     }
     
-    setTimeout(render, 100);
+    // 初回レンダリング
+    render();
   </script>
 </body>
 </html>
