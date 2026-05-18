@@ -15,65 +15,67 @@
       <h1 class="text-xl font-bold text-gray-800 flex items-center gap-1">
         <span class="text-orange-500">🎸</span> バンドマッチ
       </h1>
-      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver 1.08</div>
+      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver 1.09</div>
     </header>
 
     <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-24">
     </main>
 
     <div id="band-modal" class="absolute inset-0 bg-black/50 z-20 hidden flex items-end justify-center">
-      <div id="modal-container" class="bg-white w-full rounded-t-2xl p-5 max-h-[92vh] h-auto flex flex-col space-y-3 shadow-2xl transition-all duration-300">
-        <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto -mt-2 mb-1 shrink-0"></div>
+      <div id="modal-container" class="bg-white w-full rounded-t-2xl p-5 h-[85vh] flex flex-col shadow-2xl transition-all duration-300">
+        <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto -mt-2 mb-3 shrink-0"></div>
         
-        <div id="modal-header-area" class="flex justify-between items-start shrink-0">
-          <div>
-            <span id="modal-band-type" class="text-[10px] font-bold text-orange-500 tracking-wider">BAND DETAILS</span>
-            <h3 id="modal-band-name" class="font-extrabold text-gray-800 text-lg mt-0.5 truncate max-w-[260px]">---</h3>
-            <p id="modal-band-creator" class="text-[10px] text-gray-400 mt-0.5">募集主: ---</p>
+        <div class="flex-1 overflow-y-auto space-y-4 pr-1 pb-2 min-h-0">
+          <div id="modal-header-area" class="flex justify-between items-start shrink-0">
+            <div>
+              <span id="modal-band-type" class="text-[10px] font-bold text-orange-500 tracking-wider">BAND DETAILS</span>
+              <h3 id="modal-band-name" class="font-extrabold text-gray-800 text-lg mt-0.5 truncate max-w-[260px]">---</h3>
+              <p id="modal-band-creator" class="text-[10px] text-gray-400 mt-0.5">募集主: ---</p>
+            </div>
+            <div class="flex flex-col items-end gap-1 shrink-0">
+              <div id="modal-band-count" class="bg-orange-500 text-white px-2.5 py-1 rounded-full font-black text-xs">🔥 0人</div>
+            </div>
           </div>
-          <div class="flex flex-col items-end gap-1 shrink-0">
-            <div id="modal-band-count" class="bg-orange-500 text-white px-2.5 py-1 rounded-full font-black text-xs">🔥 0人</div>
+
+          <div id="modal-admin-actions" class="flex gap-2 shrink-0 hidden">
+            <button id="modal-toggle-status-btn" class="flex-1 py-1.5 rounded text-[10px] font-bold border transition-all"></button>
+            <button id="modal-delete-btn" class="bg-red-50 text-red-600 border border-red-200 px-2.5 py-1.5 rounded text-[10px] font-bold active:bg-red-100">🚨 解散</button>
           </div>
-        </div>
+          
+          <button id="modal-join-btn" class="w-full py-2.5 rounded-xl font-bold text-xs shadow-md transition-all shrink-0"></button>
 
-        <div id="modal-admin-actions" class="flex gap-2 shrink-0 hidden">
-          <button id="modal-toggle-status-btn" class="flex-1 py-1.5 rounded text-[10px] font-bold border transition-all"></button>
-          <button id="modal-delete-btn" class="bg-red-50 text-red-600 border border-red-200 px-2.5 py-1.5 rounded text-[10px] font-bold active:bg-red-100">🚨 解散</button>
-        </div>
-        
-        <button id="modal-join-btn" class="w-full py-2.5 rounded-xl font-bold text-xs shadow-md transition-all shrink-0"></button>
+          <div id="modal-part-area" class="bg-gray-50 border rounded-xl p-2 shrink-0">
+            <span class="text-[10px] font-bold text-gray-400 block mb-1">現在のパート編成</span>
+            <div id="modal-part-summary" class="flex gap-2 flex-wrap text-[10px]"></div>
+          </div>
 
-        <div id="modal-part-area" class="bg-gray-50 border rounded-xl p-2 shrink-0">
-          <span class="text-[10px] font-bold text-gray-400 block mb-1">現在のパート編成</span>
-          <div id="modal-part-summary" class="flex gap-2 flex-wrap text-[10px]"></div>
-        </div>
-
-        <div id="modal-member-area" class="border-t border-gray-100 pt-2 shrink-0">
-          <h4 class="font-bold text-[11px] text-gray-500 mb-1 flex items-center gap-1">
-            <i class="fa-solid fa-users text-orange-500"></i> エントリー中のメンバー <span class="text-[9px] font-normal text-gray-400">(タップでプロフィール表示)</span>
-          </h4>
-          <div id="modal-member-list" class="flex flex-wrap gap-1 max-h-[80px] overflow-y-auto"></div>
-        </div>
-
-        <div id="modal-chat-section" class="border-t border-gray-100 pt-2 flex-1 flex flex-col min-h-[220px]">
-          <div class="flex justify-between items-center mb-1 shrink-0">
-            <h4 class="font-bold text-[11px] text-gray-500 flex items-center gap-1">
-              <i class="fa-solid fa-comments text-orange-500"></i> 作戦会議チャット
+          <div id="modal-member-area" class="border-t border-gray-100 pt-2 shrink-0">
+            <h4 class="font-bold text-[11px] text-gray-500 mb-1 flex items-center gap-1">
+              <i class="fa-solid fa-users text-orange-500"></i> エントリー中のメンバー <span class="text-[9px] font-normal text-gray-400">(タップでプロフィール表示)</span>
             </h4>
-            <button onclick="toggleChatExpand()" id="chat-expand-btn" class="text-[10px] bg-orange-50 text-orange-600 border border-orange-200 px-2 py-0.5 rounded font-bold hover:bg-orange-100 active:scale-95 transition-all">
-              <i class="fa-solid fa-expand mr-1"></i> チャットを拡大
-            </button>
+            <div id="modal-member-list" class="flex flex-wrap gap-1 max-h-[80px] overflow-y-auto"></div>
           </div>
-          
-          <div id="modal-chat-timeline" class="flex-1 overflow-y-auto space-y-3 py-2 bg-gray-50/50 rounded-lg p-2.5 border border-gray-100"></div>
-          
-          <div class="flex gap-1.5 mt-1.5 shrink-0">
-            <input type="text" id="modal-chat-input" autocomplete="off" placeholder="このバンド内で発言..." class="flex-1 text-xs p-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500" onkeypress="if(event.key==='Enter') sendBandChatMessage()"/>
-            <button onclick="sendBandChatMessage()" class="bg-orange-500 text-white text-xs px-3 py-2 rounded-lg font-bold shadow-sm active:bg-orange-600"><i class="fa-solid fa-paper-plane"></i></button>
+
+          <div id="modal-chat-section" class="border-t border-gray-100 pt-2 flex flex-col h-[280px]">
+            <div class="flex justify-between items-center mb-1 shrink-0">
+              <h4 class="font-bold text-[11px] text-gray-500 flex items-center gap-1">
+                <i class="fa-solid fa-comments text-orange-500"></i> 作戦会議チャット
+              </h4>
+              <button onclick="toggleChatExpand()" id="chat-expand-btn" class="text-[10px] bg-orange-50 text-orange-600 border border-orange-200 px-2 py-0.5 rounded font-bold hover:bg-orange-100 active:scale-95 transition-all">
+                <i class="fa-solid fa-expand mr-1"></i> チャットを拡大
+              </button>
+            </div>
+            
+            <div id="modal-chat-timeline" class="flex-1 overflow-y-auto space-y-3 py-2 bg-gray-50/50 rounded-lg p-2.5 border border-gray-100"></div>
+            
+            <div class="flex gap-1.5 mt-1.5 shrink-0">
+              <input type="text" id="modal-chat-input" autocomplete="off" placeholder="このバンド内で発言..." class="flex-1 text-xs p-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500" onkeypress="if(event.key==='Enter') sendBandChatMessage()"/>
+              <button onclick="sendBandChatMessage()" class="bg-orange-500 text-white text-xs px-3 py-2 rounded-lg font-bold shadow-sm active:bg-orange-600"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
           </div>
         </div>
 
-        <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-semibold shrink-0">閉じる</button>
+        <button onclick="closeModal()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 py-3 mt-2 rounded-xl text-xs font-semibold shrink-0 shadow-sm border border-gray-200/50 active:scale-[0.99]">閉じる</button>
       </div>
     </div>
 
@@ -400,16 +402,12 @@
       return "bg-green-50 text-green-600 border-green-100";
     }
 
-    // メンバープロフィール画面へジャンプする処理
     window.jumpToUserProfile = function(userName) {
       if (!userName || userName === "不明" || userName === "未設定の部員") return;
-      // イベントのバブリング（親要素のクリックイベント連動）を防ぐ
       if (event) event.stopPropagation();
       
-      // モーダルが開いていたら閉じる
       closeModal();
       
-      // 検索クエリにユーザー名をセットして部員名簿タブへ切り替え
       userSearchQuery = userName;
       switchTab('search');
     }
@@ -655,7 +653,6 @@
 
       container.querySelectorAll('.band-card').forEach(card => {
         card.onclick = (e) => {
-          // メンバーバッジ自体をクリックした場合はモーダルを開かない
           if (e.target.closest('[onclick^="jumpToUserProfile"]')) return;
           openModal(card.dataset.bandId);
         };
@@ -800,7 +797,7 @@
       
       const container = document.getElementById('modal-container');
       container.classList.remove('h-[90vh]');
-      container.classList.add('h-auto');
+      container.classList.add('h-[85vh]'); // 修正: 初期時も固定高さを設定
 
       document.getElementById('modal-header-area').classList.remove('hidden');
       document.getElementById('modal-join-btn').classList.remove('hidden');
@@ -824,7 +821,7 @@
       const expandBtn = document.getElementById('chat-expand-btn');
 
       if (isChatExpanded) {
-        container.classList.remove('h-auto');
+        container.classList.remove('h-[85vh]');
         container.classList.add('h-[90vh]');
 
         headerArea.classList.add('hidden');
@@ -835,7 +832,7 @@
         expandBtn.innerHTML = '<i class="fa-solid fa-compress mr-1"></i> 戻す';
       } else {
         container.classList.remove('h-[90vh]');
-        container.classList.add('h-auto');
+        container.classList.add('h-[85vh]'); // 修正
 
         headerArea.classList.remove('hidden');
         joinBtn.classList.remove('hidden');
