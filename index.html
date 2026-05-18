@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold text-gray-800 flex items-center gap-1">
         <span class="text-orange-500">🎸</span> バンドマッチ
       </h1>
-      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver 1.01</div>
+      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver 1.04</div>
     </header>
 
     <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-24">
@@ -95,6 +95,7 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const FIXED_BANDS = [
+      // --- 邦楽ロック・ポップス（現代〜定番） ---
       { id: "1", name: "YOASOBI コピー" }, { id: "2", name: "RADWIMPS コピー" }, { id: "3", name: "ずっと真夜中でいいのに。 コピー" },
       { id: "4", name: "King Gnu コピー" }, { id: "5", name: "Official髭男dism コピー" }, { id: "6", name: "ヨルシカ コピー" },
       { id: "7", name: "back number コピー" }, { id: "8", name: "スピッツ コピー" }, { id: "9", name: "BUMP OF CHICKEN コピー" },
@@ -127,8 +128,37 @@
       { id: "86", name: "KUZIRA コピー" }, { id: "87", name: "鉄風東京 コピー" }, { id: "88", name: "ルサンチマン コピー" },
       { id: "89", name: "文藝天国 コピー" }, { id: "90", name: "yonige コピー" }, { id: "91", name: "Chilli Beans. コピー" },
       { id: "92", name: "ブランデー戦記 コピー" }, { id: "93", name: "chilldspot コピー" }, { id: "94", name: "TOMOO コピー" },
-      { id: "95", name: "Cody・Lee(理) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
-      { id: "98", name: "リーガルリリー コピー" }
+      { id: "95", name: "Cody・Lee(李) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
+      { id: "98", name: "リーガルリリー コピー" }, { id: "101", name: "ELLEGARDEN コピー" }, { id: "102", name: "WANIMA コピー" },
+      { id: "103", name: "MAN WITH A MISSION コピー" }, { id: "104", name: "MY FIRST STORY コピー" }, { id: "105", name: "ONE N' ONLY コピー" },
+      { id: "106", name: "Coldrain コピー" }, { id: "107", name: "Crossfaith コピー" }, { id: "108", name: "Fear, and Loathing in Las Vegas コピー" },
+      { id: "109", name: "ROTTENGRAFFTY コピー" }, { id: "110", name: "HEY-SMITH コピー" }, { id: "111", name: "10-FEET コピー" },
+      { id: "112", name: "サンボマスター コピー" }, { id: "113", name: "go!go!vanillas コピー" }, { id: "114", name: "GLIM SPANKY コピー" },
+
+      // --- 洋楽（現代・2000年代オルタナ・ポップス） ---
+      { id: "201", name: "Coldplay コピー" }, { id: "202", name: "Maroon 5 コピー" }, { id: "203", name: "Green Day コピー" },
+      { id: "204", name: "Linkin Park コピー" }, { id: "205", name: "Muse コピー" }, { id: "206", name: "The 1975 コピー" },
+      { id: "207", name: "Arctic Monkeys コピー" }, { id: "208", name: "The Strokes コピー" }, { id: "209", name: "Red Hot Chili Peppers コピー" },
+      { id: "210", name: "Foo Fighters コピー" }, { id: "211", name: "Bring Me The Horizon コピー" }, { id: "212", name: "Weezer コピー" },
+      { id: "213", name: "My Chemical Romance コピー" }, { id: "214", name: "Fall Out Boy コピー" }, { id: "215", name: "Panic! At The Disco コピー" },
+      { id: "216", name: "Paramore コピー" }, { id: "217", name: "AVRIL LAVIGNE コピー" }, { id: "218", name: "Oasis コピー" },
+      { id: "219", name: "Radiohead コピー" }, { id: "220", name: "Blur コピー" }, { id: "221", name: "Gorillaz コピー" },
+      { id: "222", name: "Franz Ferdinand コピー" }, { id: "223", name: "The Killers コピー" }, { id: "224", name: "Maneskin コピー" },
+      { id: "225", name: "Bruno Mars コピー" }, { id: "226", name: "One Direction コピー" }, { id: "227", name: "Foster The People コピー" },
+
+      // --- 古いバンド・レジェンド・クラシックロック（60s〜90s） ---
+      { id: "301", name: "The Beatles コピー" }, { id: "302", name: "Queen コピー" }, { id: "303", name: "Led Zeppelin コピー" },
+      { id: "304", name: "Pink Floyd コピー" }, { id: "305", name: "Nirvana コピー" }, { id: "306", name: "Bon Jovi コピー" },
+      { id: "307", name: "Guns N' Roses コピー" }, { id: "308", name: "Aerosmith コピー" }, { id: "309", name: "AC/DC コピー" },
+      { id: "310", name: "U2 コピー" }, { id: "311", name: "The Rolling Stones コピー" }, { id: "312", name: "The Who コピー" },
+      { id: "313", name: "Deep Purple コピー" }, { id: "314", name: "Black Sabbath コピー" }, { id: "315", name: "Metallica コピー" },
+      { id: "316", name: "Megadeth コピー" }, { id: "317", name: "Van Halen コピー" }, { id: "318", name: "Mr. Big コピー" },
+      { id: "319", name: "Kiss コピー" }, { id: "320", name: "The Police コピー" }, { id: "321", name: "The Smiths コピー" },
+      { id: "322", name: "The Stone Roses コピー" }, { id: "323", name: "The Clash コピー" }, { id: "324", name: "Sex Pistols コピー" },
+      { id: "325", name: "Eric Clapton コピー" }, { id: "326", name: "Jimi Hendrix コピー" }, { id: "327", name: "David Bowie コピー" },
+      { id: "328", name: "BOØWY コピー" }, { id: "329", name: "THE BLUE HEARTS コピー" }, { id: "330", name: "X JAPAN コピー" },
+      { id: "331", name: "L'Arc~en~Ciel コピー" }, { id: "332", name: "GLAY コピー" }, { id: "333", name: "JUDY AND MARY コピー" },
+      { id: "334", name: "THE YELLOW MONKEY コピー" }, { id: "335", name: "ユニコーン コピー" }
     ];
 
     let recruitedBands = [];
@@ -335,6 +365,43 @@
       } catch (e) { console.error(e); }
     }
 
+    // ★★★ パスワード付きデータベース全削除機能 ★★★
+    async function resetAllApplicationData() {
+      const password = prompt("🔐 管理者パスワードを入力してください:");
+      if (password === null) return; // キャンセルされた場合
+      
+      if (password !== "Suzu2525") {
+        alert("❌ パスワードが違います。リセットを中止しました。");
+        return;
+      }
+
+      const confirm1 = confirm("⚠️【警告】本当にアプリ内のすべてのデータを完全にリセットしますか？\n(登録された全ユーザー、作成された自由バンド、チャット履歴がすべて消去されます)");
+      if (!confirm1) return;
+
+      const confirm2 = confirm("🚨 本当に、本当によろしいですか？この操作は取り消せません。");
+      if (!confirm2) return;
+
+      isSaving = true;
+      try {
+        // 各テーブルから全データを一斉消去
+        await supabaseClient.from('messages').delete().neq('id', 'dummy');
+        await supabaseClient.from('bands').delete().neq('id', 'dummy');
+        await supabaseClient.from('users').delete().neq('id', 'dummy');
+
+        // ローカルに保存されている自分のプロフィールもクリア
+        localStorage.removeItem('k_on_me_final');
+        localStorage.removeItem('k_on_my_id');
+
+        alert("🎉 アプリケーションのすべてのデータが完全にリセットされました。ページをリロードします。");
+        window.location.reload();
+      } catch (e) {
+        console.error(e);
+        alert("エラーが発生し、一部のデータをリセットできませんでした。");
+      } finally {
+        isSaving = false;
+      }
+    }
+
     function getGradeColor(grade) {
       if(grade === "2年生") return "bg-blue-50 text-blue-600 border-blue-100";
       if(grade === "3年生") return "bg-purple-50 text-purple-600 border-purple-100";
@@ -452,45 +519,56 @@
         const grades = ['新入生', '2年生', '3年生', '4年生以上'];
         
         let html = `
-          <div class="bg-white p-5 rounded-xl border shadow-sm space-y-4">
-            <h3 class="font-bold text-gray-800 border-b pb-2 text-base">プロフィール設定</h3>
-            
-            <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1">部員名</label>
-              <input type="text" id="edit-name" autocomplete="off" class="w-full text-sm p-2.5 border rounded-lg focus:outline-none focus:border-orange-500" />
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1">LINE ID（任意）</label>
-              <input type="text" id="edit-line-id" autocomplete="off" placeholder="例: tms_taro123" class="w-full text-sm p-2.5 border rounded-lg focus:outline-none focus:border-orange-500" />
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1">学年</label>
-              <select id="edit-grade" class="w-full text-sm p-2.5 bg-white border rounded-lg focus:outline-none focus:border-orange-500">
-                ${grades.map(g => `<option value="${g}">${g}</option>`).join('')}
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1">担当パート</label>
-              <div class="grid grid-cols-2 gap-2">
-        `;
-        allParts.forEach(p => {
-          html += `
-            <label class="flex items-center gap-2 text-xs bg-gray-50 p-2.5 rounded border cursor-pointer">
-              <input type="checkbox" name="edit-parts" value="${p}" class="w-4 h-4 accent-orange-500" /> ${p}
-            </label>
-          `;
-        });
-        html += `
+          <div class="space-y-4">
+            <div class="bg-white p-5 rounded-xl border shadow-sm space-y-4">
+              <h3 class="font-bold text-gray-800 border-b pb-2 text-base">プロフィール設定</h3>
+              
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">部員名</label>
+                <input type="text" id="edit-name" autocomplete="off" class="w-full text-sm p-2.5 border rounded-lg focus:outline-none focus:border-orange-500" />
               </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">LINE ID（任意）</label>
+                <input type="text" id="edit-line-id" autocomplete="off" placeholder="例: tms_taro123" class="w-full text-sm p-2.5 border rounded-lg focus:outline-none focus:border-orange-500" />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">学年</label>
+                <select id="edit-grade" class="w-full text-sm p-2.5 bg-white border rounded-lg focus:outline-none focus:border-orange-500">
+                  ${grades.map(g => `<option value="${g}">${g}</option>`).join('')}
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">担当パート</label>
+                <div class="grid grid-cols-2 gap-2">
+          `;
+          allParts.forEach(p => {
+            html += `
+              <label class="flex items-center gap-2 text-xs bg-gray-50 p-2.5 rounded border cursor-pointer">
+                <input type="checkbox" name="edit-parts" value="${p}" class="w-4 h-4 accent-orange-500" /> ${p}
+              </label>
+            `;
+          });
+          html += `
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">ひとことコメント</label>
+                <textarea id="edit-bio" class="w-full text-sm p-2.5 border rounded-lg h-20 focus:outline-none focus:border-orange-500"></textarea>
+              </div>
+              
+              <button id="save-profile-btn" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-sm shadow-md active:bg-orange-600 transition-all">設定を保存する</button>
             </div>
-            <div>
-              <label class="block text-xs font-bold text-gray-500 mb-1">ひとことコメント</label>
-              <textarea id="edit-bio" class="w-full text-sm p-2.5 border rounded-lg h-20 focus:outline-none focus:border-orange-500"></textarea>
+
+            <div class="bg-red-50/50 border border-red-200 p-4 rounded-xl space-y-2">
+              <span class="text-xs font-bold text-red-600 block"><i class="fa-solid fa-lock mr-1"></i> 管理者用システム設定 (要パスワード)</span>
+              <p class="text-[11px] text-red-500 leading-relaxed">共有データベース上のチャット、自由追加募集バンド、部員名簿をすべて一括削除して、アプリ全体を完全な空の状態に初期化します。</p>
+              <button id="app-reset-btn" class="w-full bg-red-600 text-white py-2.5 rounded-lg font-bold text-xs shadow-sm active:bg-red-700 transition-all">
+                <i class="fa-solid fa-trash-can mr-1"></i> アプリ内全データをリセットする
+              </button>
             </div>
-            <button id="save-profile-btn" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-sm shadow-md active:bg-orange-600">設定を保存する</button>
           </div>
         `;
         main.innerHTML = html;
@@ -504,6 +582,7 @@
         });
 
         document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
+        document.getElementById('app-reset-btn').addEventListener('click', resetAllApplicationData);
       }
     }
 
