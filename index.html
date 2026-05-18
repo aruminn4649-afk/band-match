@@ -15,7 +15,7 @@
       <h1 class="text-xl font-bold text-gray-800 flex items-center gap-1">
         <span class="text-orange-500">🎸</span> バンドマッチ
       </h1>
-      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">完全統合版</div>
+      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">自由募集対応版</div>
     </header>
 
     <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-24">
@@ -65,8 +65,8 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzb250bHVwd3J2bW10aHNvdmF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDQ3NTcsImV4cCI6MjA5NDUyMDc1N30.DTGclEZKMoFNAwZPPdNOMjEtDVVpw4s-D_jwRaL8MZc";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 重複を完全に排除し、全288組に拡張した完全版緩募リスト
-    const BANDS = [
+    // 固定バンドリスト（重複排除済みの288組）
+    const STATIC_BANDS = [
       { id: "1", name: "YOASOBI コピー" }, { id: "2", name: "RADWIMPS コピー" }, { id: "3", name: "ずっと真夜中でいいのに。 コピー" },
       { id: "4", name: "King Gnu コピー" }, { id: "5", name: "Official髭男dism コピー" }, { id: "6", name: "ヨルシカ コピー" },
       { id: "7", name: "back number コピー" }, { id: "8", name: "スピッツ コピー" }, { id: "9", name: "BUMP OF CHICKEN コピー" },
@@ -99,74 +99,72 @@
       { id: "86", name: "KUZIRA コピー" }, { id: "87", name: "鉄風東京 コピー" }, { id: "88", name: "ルサンチマン コピー" },
       { id: "89", name: "文藝天国 コピー" }, { id: "90", name: "yonige コピー" }, { id: "91", name: "Chilli Beans. コピー" },
       { id: "92", name: "ブランデー戦記 コピー" }, { id: "93", name: "chilldspot コピー" }, { id: "94", name: "TOMOO コピー" },
-      { id: "95", name: "Cody・Lee(李) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
-      { id: "98", name: "リーガルリリー コピー" },
-      // ここから追加の200バンド（重複なし）
-      { id: "99", name: "Kroi コピー" }, { id: "100", name: "wacci コピー" }, { id: "101", name: "サンボマスター コピー" },
-      { id: "102", name: "10-FEET コピー" }, { id: "103", name: "MAN WITH A MISSION コピー" }, { id: "104", name: "ELLEGARDEN コピー" },
-      { id: "105", name: "the pillows コピー" }, { id: "106", name: "GLAY コピー" }, { id: "107", name: "L'Arc~en~Ciel コピー" },
-      { id: "108", name: "X JAPAN コピー" }, { id: "109", name: "LUNA SEA コピー" }, { id: "110", name: "BOØWY コピー" },
-      { id: "111", name: "JUDY AND MARY コピー" }, { id: "112", name: "LINDBERG コピー" }, { id: "113", name: "REGINA コピー" },
-      { id: "114", name: "THE BLUE HEARTS コピー" }, { id: "115", name: "THE HIGH-LOWS コピー" }, { id: "116", name: "ザ・クロマニヨンズ コピー" },
-      { id: "117", name: "ウルフルズ コピー" }, { id: "118", name: "ユニコーン コピー" }, { id: "119", name: "PRINCESS PRINCESS コピー" },
-      { id: "120", name: "SHOW-YA コピー" }, { id: "121", name: "TRICERATOPS コピー" }, { id: "122", name: "GRAPEVINE コピー" },
-      { id: "123", name: "くるり コピー" }, { id: "124", name: "SUPERCAR コピー" }, { id: "125", name: "BLANKEY JET CITY コピー" },
-      { id: "126", name: "THE MICHELLE GUN ELEPHANT コピー" }, { id: "127", name: "the HIATUS コピー" }, { id: "128", name: "MONOEYES コピー" },
-      { id: "129", name: "coldrain コピー" }, { id: "130", name: "Crossfaith コピー" }, { id: "131", name: "Crystal Lake コピー" },
-      { id: "132", name: "ROTTENGRAFFTY コピー" }, { id: "133", name: "HEY-SMITH コピー" }, { id: "134", name: "Ken Yokoyama コピー" },
-      { id: "135", name: "Hi-STANDARD コピー" }, { id: "136", name: "HAWAIIAN6 コピー" }, { id: "137", name: "LOCOFRANK コピー" },
-      { id: "138", name: "OVER ARM THROW コピー" }, { id: "139", name: "COUNTRY YARD コピー" }, { id: "140", name: "SHANK コピー" },
-      { id: "141", name: "G-FREAK FACTORY コピー" }, { id: "142", name: "SHIMA コピー" }, { id: "143", name: "Northern19 コピー" },
-      { id: "144", name: "TOTALFAT コピー" }, { id: "145", name: "BIGMAMA コピー" }, { id: "146", name: "GOOD4NOTHING コピー" },
-      { id: "147", name: "EGG BRAIN コピー" }, { id: "148", name: "THE SNEAKERS コピー" }, { id: "149", name: "dustbox コピー" },
-      { id: "150", name: "locofrank コピー" }, { id: "151", name: "SABOTEN コピー" }, { id: "152", name: "PAN コピー" },
-      { id: "153", name: " there is a light that never goes out コピー" }, { id: "154", name: "ENTH コピー" }, { id: "155", name: "SPARK SOUND SHOW コピー" },
-      { id: "156", name: "Track's コピー" }, { id: "157", name: "Maki コピー" }, { id: "158", name: "SideChest コピー" },
-      { id: "159", name: "Atomic Skipper コピー" }, { id: "160", name: "KOTORI コピー" }, { id: "161", name: "Age Factory コピー" },
-      { id: "162", name: "GEZAN コピー" }, { id: "163", name: "NOT WONK コピー" }, { id: "164", name: "DYGL コピー" },
-      { id: "165", name: "The Birthday コピー" }, { id: "166", name: "ROSSO コピー" }, { id: "167", name: "the pillows コピー" },
-      { id: "168", name: "MO'SOME TONEBENDER コピー" }, { id: "169", name: "ART-SCHOOL コピー" }, { id: "170", name: "BURGER NUDS コピー" },
-      { id: "171", name: "Good Dog Happy Men コピー" }, { id: "172", name: "People In The Box コピー" }, { id: "173", name: "plenty コピー" },
-      { id: "174", name: "Galileo Galilei コピー" }, { id: "175", name: "BBHF コピー" }, { id: "176", name: "warbear コピー" },
-      { id: "177", name: "sleepy.ab コピー" }, { id: "178", name: "サカナクション コピー" }, { id: "179", name: "avengers in sci-fi コピー" },
-      { id: "180", name: "the telephones コピー" }, { id: "181", name: "POLYSICS コピー" }, { id: "182", name: "DE DE MOUSE コピー" },
-      { id: "183", name: "the band apart コピー" }, { id: "184", name: "toe コピー" }, { id: "185", name: "LITE コピー" },
-      { id: "186", name: "SPECIAL OTHERS コピー" }, { id: "187", name: "toconoma コピー" }, { id: "188", name: "jizue コピー" },
-      { id: "189", name: "mouse on the keys コピー" }, { id: "190", name: "fox capture plan コピー" }, { id: "191", name: "mudy on the 昨晩 コピー" },
-      { id: "192", name: "cinema staff コピー" }, { id: "193", name: "アルカラ コピー" }, { id: "194", name: "Gacharic Spin コピー" },
-      { id: "195", name: "NEMOPHILA コピー" }, { id: "196", name: "BAND-MAID コピー" }, { id: "197", name: "LOVEBITES コピー" },
-      { id: "198", name: "Aldious コピー" }, { id: "199", name: "SCANDAL コピー" }, { id: "200", name: "赤い公園 コピー" },
-      { id: "201", name: "ストレイテナー コピー" }, { id: "202", name: "Nothing's Carved In Stone コピー" }, { id: "203", name: "ZAZEN BOYS コピー" },
-      { id: "204", name: "KIMONOS コピー" }, { id: "205", name: "電気グルーヴ コピー" }, { id: "206", name: "capsule コピー" },
-      { id: "207", name: "Perfume コピー" }, { id: "208", name: "BABYMETAL コピー" }, { id: "209", name: "PassCode コピー" },
-      { id: "210", name: "BiSH コピー" }, { id: "211", name: "BiS コピー" }, { id: "212", name: "EMPiRE コピー" },
-      { id: "213", name: "豆柴の大群 コピー" }, { id: "214", name: "GANG PARADE コピー" }, { id: "215", name: "ASP コピー" },
-      { id: "216", name: "ExWHYZ コピー" }, { id: "217", name: "神聖かまってちゃん コピー" }, { id: "218", name: "チームしゃちほこ コピー" },
-      { id: "219", name: "私立恵比寿中学 コピー" }, { id: "220", name: "ももいろクローバーZ コピー" }, { id: "221", name: "でんぱ組.inc コピー" },
-      { id: "222", name: "虹のコンキスタドール コピー" }, { id: "223", name: "わーすた コピー" }, { id: "224", name: "フィロソフィーのダンス コピー" },
-      { id: "225", name: "CYNHN コピー" }, { id: "226", name: "sora tob sakana コピー" }, { id: "227", name: "Maison book girl コピー" },
-      { id: "228", name: "ヤルヴィスト コピー" }, { id: "229", name: "BiS1st コピー" }, { id: "230", name: "ゆるめるモ! コピー" },
-      { id: "231", name: "おやすみホログラム コピー" }, { id: "232", name: "・・・・・・・・・ コピー" }, { id: "233", name: "NECRONOMIDOL コピー" },
-      { id: "234", name: "じゅじゅ コピー" }, { id: "235", name: "コショージメグミ コピー" }, { id: "236", name: "ベルハーモニー コピー" },
-      { id: "237", name: "ヤなことそっとミュート コピー" }, { id: "238", name: "amiinA コピー" }, { id: "239", name: "クマリデパート コピー" },
-      { id: "240", name: "クロスノエシス コピー" }, { id: "241", name: "キングサリ コピー" }, { id: "242", name: "タイトル未定 コピー" },
-      { id: "243", name: "fishbowl コピー" }, { id: "244", name: "開歌-かいか- コピー" }, { id: "245", name: "I's コピー" },
-      { id: "246", name: "悪魔のキッス コピー" }, { id: "247", name: "戦慄かなの コピー" }, { id: "248", name: "かてぃ コピー" },
-      { id: "249", name: "ZOC コピー" }, { id: "250", name: "METAMUSE コピー" }, { id: "251", name: "MAPA コピー" },
-      { id: "252", name: "シンデレラ宣言! コピー" }, { id: "253", name: "モノクローン コピー" }, { id: "254", name: "夜光性アミューズ コピー" },
-      { id: "255", name: "TENRIN コピー" }, { id: "256", name: "iLiFE! コピー" }, { id: "257", name: "のんふぃく! コピー" },
-      { id: "258", name: "ヒロインズ コピー" }, { id: "259", name: "シュレーディンガーの犬 コピー" }, { id: "260", name: "ラテラルアーク コピー" },
-      { id: "261", name: "GILTY×GILTY コピー" }, { id: "262", name: "ナナヲアカリ コピー" }, { id: "263", name: "れるりり コピー" },
-      { id: "264", name: "DECO*27 コピー" }, { id: "265", name: "ピノキオピー コピー" }, { id: "266", name: "Neru コピー" },
-      { id: "267", name: "40mP コピー" }, { id: "268", name: "すりぃ コピー" }, { id: "269", name: "Ayase コピー" },
-      { id: "270", name: "syudou コピー" }, { id: "271", name: "ツミキ コピー" }, { id: "272", name: "Kanaria コピー" },
-      { id: "273", name: "Chinozo コピー" }, { id: "274", name: "柊キライ コピー" }, { id: "275", name: "Wotamin コピー" },
-      { id: "276", name: "みきとP コピー" }, { id: "277", name: "Giga コピー" }, { id: "278", name: "TeddyLoid コピー" },
-      { id: "279", name: "かいりきベア コピー" }, { id: "280", name: "じん コピー" }, { id: "281", name: "kemu コピー" },
-      { id: "282", name: "ハチ コピー" }, { id: "283", name: "wowaka コピー" }, { id: "284", name: "トーマ コピー" },
-      { id: "285", name: "れるりり コピー" }, { id: "286", name: "悪ノP コピー" }, { id: "287", name: "164 コピー" },
-      { id: "288", name: "40mP コピー" }
+      { id: "95", name: "Cody・Lee(理) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
+      { id: "98", name: "リーガルリリー コピー" }, { id: "99", name: "Kroi コピー" }, { id: "100", name: "wacci コピー" }, 
+      { id: "101", name: "サンボマスター コピー" }, { id: "102", name: "10-FEET コピー" }, { id: "103", name: "MAN WITH A MISSION コピー" }, 
+      { id: "104", name: "ELLEGARDEN コピー" }, { id: "105", name: "the pillows コピー" }, { id: "106", name: "GLAY コピー" }, 
+      { id: "107", name: "L'Arc~en~Ciel コピー" }, { id: "108", name: "X JAPAN コピー" }, { id: "109", name: "LUNA SEA コピー" }, 
+      { id: "110", name: "BOØWY コピー" }, { id: "111", name: "JUDY AND MARY コピー" }, { id: "112", name: "LINDBERG コピー" }, 
+      { id: "113", name: "REGINA コピー" }, { id: "114", name: "THE BLUE HEARTS コピー" }, { id: "115", name: "THE HIGH-LOWS コピー" }, 
+      { id: "116", name: "ザ・クロマニヨンズ コピー" }, { id: "117", name: "ウルフルズ コピー" }, { id: "118", name: "ユニコーン コピー" }, 
+      { id: "119", name: "PRINCESS PRINCESS コピー" }, { id: "120", name: "SHOW-YA コピー" }, { id: "121", name: "TRICERATOPS コピー" }, 
+      { id: "122", name: "GRAPEVINE コピー" }, { id: "124", name: "SUPERCAR コピー" }, { id: "125", name: "BLANKEY JET CITY コピー" }, 
+      { id: "126", name: "THE MICHELLE GUN ELEPHANT コピー" }, { id: "127", name: "the HIATUS コピー" }, { id: "128", name: "MONOEYES コピー" }, 
+      { id: "129", name: "coldrain コピー" }, { id: "130", name: "Crossfaith コピー" }, { id: "131", name: "Crystal Lake コピー" }, 
+      { id: "132", name: "ROTTENGRAFFTY コピー" }, { id: "133", name: "HEY-SMITH コピー" }, { id: "134", name: "Ken Yokoyama コピー" }, 
+      { id: "135", name: "Hi-STANDARD コピー" }, { id: "136", name: "HAWAIIAN6 コピー" }, { id: "137", name: "LOCOFRANK コピー" }, 
+      { id: "138", name: "OVER ARM THROW コピー" }, { id: "139", name: "COUNTRY YARD コピー" }, { id: "140", name: "SHANK コピー" }, 
+      { id: "141", name: "G-FREAK FACTORY コピー" }, { id: "142", name: "SHIMA コピー" }, { id: "143", name: "Northern19 コピー" }, 
+      { id: "144", name: "TOTALFAT コピー" }, { id: "145", name: "BIGMAMA コピー" }, { id: "146", name: "GOOD4NOTHING コピー" }, 
+      { id: "147", name: "EGG BRAIN コピー" }, { id: "148", name: "THE SNEAKERS コピー" }, { id: "149", name: "dustbox コピー" }, 
+      { id: "151", name: "SABOTEN コピー" }, { id: "152", name: "PAN コピー" }, { id: "153", name: " there is a light that never goes out コピー" }, 
+      { id: "154", name: "ENTH コピー" }, { id: "155", name: "SPARK SOUND SHOW コピー" }, { id: "156", name: "Track's コピー" }, 
+      { id: "157", name: "Maki コピー" }, { id: "158", name: "SideChest コピー" }, { id: "159", name: "Atomic Skipper コピー" }, 
+      { id: "160", name: "KOTORI コピー" }, { id: "161", name: "Age Factory コピー" }, { id: "162", name: "GEZAN コピー" }, 
+      { id: "163", name: "NOT WONK コピー" }, { id: "164", name: "DYGL コピー" }, { id: "165", name: "The Birthday コピー" }, 
+      { id: "166", name: "ROSSO コピー" }, { id: "168", name: "MO'SOME TONEBENDER コピー" }, { id: "169", name: "ART-SCHOOL コピー" }, 
+      { id: "170", name: "BURGER NUDS コピー" }, { id: "171", name: "Good Dog Happy Men コピー" }, { id: "172", name: "People In The Box コピー" }, 
+      { id: "173", name: "plenty コピー" }, { id: "174", name: "Galileo Galilei コピー" }, { id: "175", name: "BBHF コピー" }, 
+      { id: "176", name: "warbear コピー" }, { id: "177", name: "sleepy.ab コピー" }, { id: "179", name: "avengers in sci-fi コピー" }, 
+      { id: "180", name: "the telephones コピー" }, { id: "181", name: "POLYSICS コピー" }, { id: "182", name: "DE DE MOUSE コピー" }, 
+      { id: "183", name: "the band apart コピー" }, { id: "184", name: "toe コピー" }, { id: "185", name: "LITE コピー" }, 
+      { id: "186", name: "SPECIAL OTHERS コピー" }, { id: "187", name: "toconoma コピー" }, { id: "188", name: "jizue コピー" }, 
+      { id: "189", name: "mouse on the keys コピー" }, { id: "190", name: "fox capture plan コピー" }, { id: "191", name: "mudy on the 昨晩 コピー" }, 
+      { id: "192", name: "cinema staff コピー" }, { id: "193", name: "アルカラ コピー" }, { id: "194", name: "Gacharic Spin コピー" }, 
+      { id: "195", name: "NEMOPHILA コピー" }, { id: "196", name: "BAND-MAID コピー" }, { id: "197", name: "LOVEBITES コピー" }, 
+      { id: "198", name: "Aldious コピー" }, { id: "199", name: "SCANDAL コピー" }, { id: "200", name: "赤い公園 コピー" }, 
+      { id: "202", name: "Nothing's Carved In Stone コピー" }, { id: "203", name: "ZAZEN BOYS コピー" }, { id: "204", name: "KIMONOS コピー" }, 
+      { id: "205", name: "電気グルーヴ コピー" }, { id: "206", name: "capsule コピー" }, { id: "207", name: "Perfume コピー" }, 
+      { id: "208", name: "BABYMETAL コピー" }, { id: "209", name: "PassCode コピー" }, { id: "210", name: "BiSH コピー" }, 
+      { id: "212", name: "EMPiRE コピー" }, { id: "213", name: "豆柴の大群 コピー" }, { id: "214", name: "GANG PARADE コピー" }, 
+      { id: "215", name: "ASP コピー" }, { id: "216", name: "ExWHYZ コピー" }, { id: "218", name: "チームしゃちほこ コピー" }, 
+      { id: "219", name: "私立恵比寿中学 コピー" }, { id: "220", name: "ももいろクローバーZ コピー" }, { id: "221", name: "でんぱ組.inc コピー" }, 
+      { id: "222", name: "虹のコンキスタドール コピー" }, { id: "223", name: "わーすた コピー" }, { id: "224", name: "フィロソフィーのダンス コピー" }, 
+      { id: "225", name: "CYNHN コピー" }, { id: "226", name: "sora tob sakana コピー" }, { id: "227", name: "Maison book girl コピー" }, 
+      { id: "228", name: "ヤルヴィスト コピー" }, { id: "229", name: "BiS1st コピー" }, { id: "230", name: "ゆるめるモ! コピー" }, 
+      { id: "231", name: "おやすみホログラム コピー" }, { id: "232", name: "・・・・・・・・・ コピー" }, { id: "233", name: "NECRONOMIDOL コピー" }, 
+      { id: "234", name: "じゅじゅ コピー" }, { id: "235", name: "コショージメグミ コピー" }, { id: "236", name: "ベルハーモニー コピー" }, 
+      { id: "237", name: "ヤなことそっとミュート コピー" }, { id: "238", name: "amiinA コピー" }, { id: "239", name: "クマリデパート コピー" }, 
+      { id: "240", name: "クロスノエシス コピー" }, { id: "241", name: "キングサリ コピー" }, { id: "242", name: "タイトル未定 コピー" }, 
+      { id: "243", name: "fishbowl コピー" }, { id: "244", name: "開歌-かいか- コピー" }, { id: "245", name: "I's コピー" }, 
+      { id: "246", name: "悪魔のキッス コピー" }, { id: "247", name: "戦慄かなの コピー" }, { id: "248", name: "かてぃ コピー" }, 
+      { id: "249", name: "ZOC コピー" }, { id: "250", name: "METAMUSE コピー" }, { id: "251", name: "MAPA コピー" }, 
+      { id: "252", name: "シンデレラ宣言! コピー" }, { id: "253", name: "モノクローン コピー" }, { id: "254", name: "夜光性アミューズ コピー" }, 
+      { id: "255", name: "TENRIN コピー" }, { id: "256", name: "iLiFE! コピー" }, { id: "257", name: "のんふぃく! コピー" }, 
+      { id: "258", name: "ヒロインズ コピー" }, { id: "259", name: "シュレーディンガーの犬 コピー" }, { id: "260", name: "ラテラルアーク コピー" }, 
+      { id: "261", name: "GILTY×GILTY コピー" }, { id: "262", name: "ナナヲアカリ コピー" }, { id: "263", name: "れるりり コピー" }, 
+      { id: "264", name: "DECO*27 コピー" }, { id: "265", name: "ピノキオピー コピー" }, { id: "266", name: "Neru コピー" }, 
+      { id: "268", name: "すりぃ コピー" }, { id: "269", name: "Ayase コピー" }, { id: "270", name: "syudou コピー" }, 
+      { id: "271", name: "ツミキ コピー" }, { id: "272", name: "Kanaria コピー" }, { id: "273", name: "Chinozo コピー" }, 
+      { id: "274", name: "柊キライ コピー" }, { id: "275", name: "Wotamin コピー" }, { id: "276", name: "みきとP コピー" }, 
+      { id: "277", name: "Giga コピー" }, { id: "278", name: "TeddyLoid コピー" }, { id: "279", name: "かいりきベア コピー" }, 
+      { id: "280", name: "じん コピー" }, { id: "281", name: "kemu コピー" }, { id: "282", name: "ハチ コピー" }, 
+      { id: "283", name: "wowaka コピー" }, { id: "284", name: "トーマ コピー" }, { id: "286", name: "悪ノP コピー" }, 
+      { id: "287", name: "164 コピー" }, { id: "288", name: "40mP コピー" }
     ];
+
+    // 動的に合流させる最終的なバンド用配列
+    let BANDS = [...STATIC_BANDS];
 
     let myId = localStorage.getItem('k_on_my_id') || 'user_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('k_on_my_id', myId);
@@ -181,32 +179,53 @@
     let currentTab = 'home';
     let currentSelectedBandId = null;
 
-    // パート名に応じた適切な絵文字・アイコンを返す関数
     function getPartIcon(part) {
       if (part.includes('ボーカル') || part.includes('Vo')) return '🎙️';
       if (part.includes('ギター') || part.includes('Gt')) return '🎸';
-      if (part.includes('ベース') || part.includes('Ba')) return '🎸'; // ベースも弦楽器のアイコン
+      if (part.includes('ベース') || part.includes('Ba')) return '🎸'; 
       if (part.includes('ドラム') || part.includes('Dr')) return '🥁';
       if (part.includes('キーボード') || part.includes('Kb') || part.includes('Pf')) return '🎹';
       return '🎵';
     }
 
+    // クラウドからカスタム募集（bandsテーブル）とユーザーデータを取得して合流させる
     async function loadData() {
       try {
-        const { data, error } = await supabaseClient.from('users').select('*');
-        if (!error && data) {
-          allUsers = data;
+        // 1. ユーザーリストを取得
+        const { data: userData, error: userError } = await supabaseClient.from('users').select('*');
+        if (!userError && userData) {
+          allUsers = userData;
           const myCloudData = allUsers.find(u => u.id === myId);
           if (myCloudData) {
             me.bandIds = myCloudData.bandIds || [];
           }
-          if (currentTab === 'home') {
-            updateBandListOnly();
-          } else if (currentTab === 'search') {
-            render();
-          }
-          if (currentSelectedBandId) updateModalOnly(currentSelectedBandId);
         }
+
+        // 2. 自由募集（bandsテーブル）を取得して固定リストにマージする
+        const { data: customBands, error: bandError } = await supabaseClient.from('bands').select('*');
+        
+        // 常に最新の固定リストをベースに再構成（重複を阻止）
+        let mergedBands = [...STATIC_BANDS];
+        
+        if (!bandError && customBands) {
+          customBands.forEach(cb => {
+            // すでに固定リストにあるID、または名前が完全一致するものはスキップ
+            const exists = mergedBands.some(b => b.id === cb.id || b.name === cb.name);
+            if (!exists) {
+              mergedBands.push({ id: cb.id, name: cb.name });
+            }
+          });
+        }
+        BANDS = mergedBands;
+
+        // 3. 画面のパーツ更新
+        if (currentTab === 'home') {
+          updateBandListOnly();
+        } else if (currentTab === 'search') {
+          render();
+        }
+        if (currentSelectedBandId) updateModalOnly(currentSelectedBandId);
+
       } catch (e) { console.error(e); }
     }
 
@@ -240,8 +259,11 @@
 
         main.innerHTML = `
           <div class="space-y-3">
-            <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10">
-              <input type="text" id="search-input" placeholder="バンド名で検索..." class="w-full text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
+            <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10 flex gap-2">
+              <input type="text" id="search-input" placeholder="バンド名で検索..." class="flex-1 text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
+              <button onclick="addCustomBandPrompt()" class="bg-orange-500 text-white px-3 py-2.5 rounded-xl text-xs font-bold shadow-sm whitespace-nowrap active:bg-orange-600">
+                + 自由募集
+              </button>
             </div>
             <div id="band-list-container" class="grid gap-2"></div>
           </div>
@@ -323,6 +345,34 @@
       }
     }
 
+    // 自由募集（新しいバンド）をSupabaseに登録する処理
+    window.addCustomBandPrompt = async function() {
+      const name = prompt("募集したいバンド名（または曲名など）を入力してください：");
+      if (!name || !name.trim()) return;
+
+      const cleanedName = name.trim();
+
+      // 固定、動的リスト含めて重複チェック
+      const isDuplicate = BANDS.some(b => b.name.toLowerCase() === cleanedName.toLowerCase());
+      if (isDuplicate) {
+        alert("そのバンドはすでにリストに存在します！");
+        return;
+      }
+
+      const newId = 'custom_' + Math.random().toString(36).substr(2, 9);
+      const newBand = { id: newId, name: cleanedName };
+
+      try {
+        // Supabaseのbandsテーブルに書き込み
+        await supabaseClient.from('bands').insert(newBand);
+        alert(`「${cleanedName}」を自由募集リストに追加しました！`);
+        await loadData();
+      } catch (e) {
+        console.error(e);
+        alert("追加に失敗しました。");
+      }
+    }
+
     function updateBandListOnly() {
       const container = document.getElementById('band-list-container');
       if (!container) return;
@@ -336,10 +386,13 @@
 
       let html = "";
       filteredBands.forEach(b => {
+        const isCustom = b.id.startsWith('custom_');
         html += `
-          <div data-band-id="${b.id}" class="band-card bg-white border border-gray-100 rounded-xl p-3 flex justify-between items-center shadow-sm cursor-pointer hover:border-orange-200">
+          <div data-band-id="${b.id}" class="band-card bg-white border ${isCustom ? 'border-orange-200 bg-orange-50/10' : 'border-gray-100'} rounded-xl p-3 flex justify-between items-center shadow-sm cursor-pointer hover:border-orange-300">
             <div class="flex-1 pr-2 overflow-hidden">
-              <h4 class="font-bold text-gray-800 text-sm truncate">${b.name}</h4>
+              <h4 class="font-bold text-gray-800 text-sm truncate">
+                ${isCustom ? '<span class="text-xs bg-orange-100 text-orange-600 px-1 py-0.2 rounded font-bold mr-1">自由募集</span>' : ''}${b.name}
+              </h4>
               ${b.isMyJoined ? `<span class="text-[9px] bg-orange-500 text-white px-1.5 py-0.2 rounded-full font-medium">選択中</span>` : ''}
             </div>
             <div class="bg-orange-50 px-2.5 py-1 rounded-lg text-center min-w-[55px]">
