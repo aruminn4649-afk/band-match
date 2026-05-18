@@ -20,7 +20,7 @@
           <span class="text-orange-500">🎸</span> TMSバンドマッチ
         </h1>
       </div>
-      <div id="version-badge" class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver: 1.32</div>
+      <div id="version-badge" class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver: 1.34</div>
     </header>
 
     <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-24">
@@ -32,19 +32,13 @@
           <h3 class="font-extrabold text-gray-800 text-sm flex items-center gap-1">
             <i class="fa-solid fa-wrench text-orange-500"></i> アップデート履歴
           </h3>
-          <span class="text-[10px] font-bold text-gray-400">最新: Ver 1.32</span>
+          <span class="text-[10px] font-bold text-gray-400">最新: Ver 1.34</span>
         </div>
         <div class="text-xs text-gray-600 space-y-3 max-h-[60vh] overflow-y-auto pr-1">
           <div>
-            <span class="font-bold text-orange-600 block">■ Ver 1.32 (今回)</span>
+            <span class="font-bold text-orange-600 block">■ Ver 1.34 (今回)</span>
             <p class="pl-2 text-[11px] text-gray-700 leading-relaxed">
-              ・バンド作成の保存中に自動リロードが重なると、作成したバンドが画面からパッと消えてしまう不具合を完全に修正
-            </p>
-          </div>
-          <div class="opacity-60">
-            <span class="font-bold text-gray-700 block">■ Ver 1.31</span>
-            <p class="pl-2 text-[11px] leading-relaxed">
-              ・バンド作成成功時に、入力欄のテキストを自動クリアする処理を追加
+              ・Supabaseのカラム名（band_ids）の不一致バグを完全修正。プロフィール保存、カウント連動、募集の消滅をすべて解決しました。
             </p>
           </div>
         </div>
@@ -127,7 +121,7 @@
 
     const BASE_BAND_NAMES = [
       "YOASOBI", "RADWIMPS", "ずっと真夜中でいいのに。", "King Gnu", "Official髭男dism", "ヨルシカ", "back number", "スピッツ", "BUMP OF CHICKEN", "米津玄師",
-      "サカナクション", "ポルカドットスティングレイ", "緑黄色社会", "My Hair is Bad", "04 Limited Sazabys", "[Alexandros]", "UVERworld", "SiM", "BLUE ENCOUNT", "SUPER BEAVER",
+      "サカナクション", "ポルカdotスティングレイ", "緑黄色社会", "My Hair is Bad", "04 Limited Sazabys", "[Alexandros]", "UVERworld", "SiM", "BLUE ENCOUNT", "SUPER BEAVER",
       "sumika", "Saucy Dog", "マカロニえんぴつ", "クリープhype", "ゲスの極み乙女。", "indigo la End", "KEYTALK", "KANA-BOON", "THE ORAL CIGARETTES", "UNISON SQUARE GARDEN",
       "フレデリック", "ヤバイTシャツ屋さん", "SHISHAMO", "Mrs. GREEN APPLE", "Novelbright", "Vaundy", "Eve", "Aimer", "LiSA", "ASIAN KUNG-FU GENERATION",
       "エレファントカシマシ", "THE BACK HORN", "ストレイテナー", "9mm Parabellum Bullet", "凛として時雨", "androp", "Base Ball Bear", "チャットモンチー", "ねごと", "キュウソネコカミ",
@@ -166,9 +160,21 @@
     let myId = localStorage.getItem('k_on_my_id') || 'user_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('k_on_my_id', myId);
 
-    let me = { id: myId, name: "未設定の部員", grade: "新入生", parts: ["ギター"], bio: "設定を変更して使ってください！", lineId: "", bandIds: [] };
-    if(localStorage.getItem('k_on_me_v10')) {
-      me = JSON.parse(localStorage.getItem('k_on_me_v10'));
+    // 【根本修正】変数名をすべてサーバー側の実態 band_ids に変更
+    let me = { id: myId, name: "未設定の部員", grade: "新入生", parts: ["ギター"], bio: "設定を変更して使ってください！", lineId: "", band_ids: [] };
+    if(localStorage.getItem('k_on_me_v11')) {
+      me = JSON.parse(localStorage.getItem('k_on_me_v11'));
+    } else if(localStorage.getItem('k_on_me_v10')) {
+      // 互換性救済
+      const old = JSON.parse(localStorage.getItem('k_on_me_v10'));
+      if(old) {
+        me.name = old.name || me.name;
+        me.grade = old.grade || me.grade;
+        me.parts = old.parts || me.parts;
+        me.bio = old.bio || me.bio;
+        me.lineId = old.lineId || me.lineId;
+        me.band_ids = old.band_ids || old.bandIds || [];
+      }
     }
 
     let allUsers = []; 
@@ -180,20 +186,11 @@
     let isSaving = false;
 
     async function loadData() {
-      // 自分が保存中のときは、クラウドの古いデータで画面が上書きされるのを防ぐ（消えるバグ対策）
       if (isSaving) return;
       try {
         const { data: userData, error: userError } = await supabaseClient.from('users').select('*');
         if (!userError && userData) {
           allUsers = userData;
-          const myCloudData = allUsers.find(u => u.id === myId);
-          if (myCloudData) {
-            me.bandIds = Array.isArray(myCloudData.bandIds) ? myCloudData.bandIds : [];
-            if (myCloudData.lineId !== undefined) {
-              me.lineId = myCloudData.lineId;
-            }
-            localStorage.setItem('k_on_me_v10', JSON.stringify(me));
-          }
         }
 
         const { data: bandData, error: bandError } = await supabaseClient.from('bands').select('*');
@@ -226,16 +223,18 @@
 
     async function saveMyDataToCloud() {
       isSaving = true;
-      localStorage.setItem('k_on_me_v10', JSON.stringify(me));
+      localStorage.setItem('k_on_me_v11', JSON.stringify(me));
       
-      const targetBandIds = Array.isArray(me.bandIds) ? [...me.bandIds] : [];
+      const targetBandIds = Array.isArray(me.band_ids) ? [...me.band_ids] : [];
+      
+      // 【根本修正】送出するキー名称を確実に「band_ids」へ変更
       const tempMyCloudData = {
         id: me.id,
-        name: me.name,
-        parts: me.parts,
+        name: me.name || "未設定の部員",
+        parts: me.parts || ["ギター"],
         bio: me.bio ? `${me.bio} 【${me.grade}】` : `【${me.grade}】`,
         lineId: me.lineId || "", 
-        bandIds: targetBandIds
+        band_ids: targetBandIds
       };
 
       const myIndex = allUsers.findIndex(u => u.id === myId);
@@ -261,10 +260,11 @@
       const bandName = bandNameInput.value.trim();
 
       if (!bandName) return alert('バンド名を入力してください');
-      if (me.name === "未設定の部員") return alert('マイページからプロフィールを設定してください！');
+      if (!me.name || me.name === "未設定の部員") return alert('マイページからプロフィールを設定してください！');
 
       isSaving = true; 
       const newBandId = 'band_' + Math.random().toString(36).substr(2, 9);
+      
       const newBandData = {
         id: newBandId,
         name: bandName,
@@ -274,10 +274,12 @@
       };
 
       try {
-        recruitedBands.push(newBandData);
-        if (!Array.isArray(me.bandIds)) me.bandIds = [];
-        if (!me.bandIds.includes(newBandId)) {
-          me.bandIds.push(newBandId);
+        if (!recruitedBands.some(b => b.id === newBandId)) {
+          recruitedBands.push(newBandData);
+        }
+        if (!Array.isArray(me.band_ids)) me.band_ids = [];
+        if (!me.band_ids.includes(newBandId)) {
+          me.band_ids.push(newBandId);
         }
 
         bandNameInput.value = "";
@@ -285,19 +287,19 @@
         
         await supabaseClient.from('bands').insert(newBandData);
         
-        localStorage.setItem('k_on_me_v10', JSON.stringify(me));
+        localStorage.setItem('k_on_me_v11', JSON.stringify(me));
         const tempMyCloudData = {
           id: me.id, name: me.name, parts: me.parts,
           bio: me.bio ? `${me.bio} 【${me.grade}】` : `【${me.grade}】`,
-          lineId: me.lineId || "", bandIds: [...me.bandIds]
+          lineId: me.lineId || "", band_ids: [...me.band_ids]
         };
         await supabaseClient.from('users').upsert(tempMyCloudData);
       } catch (e) { 
         console.error(e); 
       } finally {
         isSaving = false; 
-        const finalInput = document.getElementById('new-band-name');
-        if (finalInput) finalInput.value = "";
+        if (bandNameInput) bandNameInput.value = "";
+        loadData();
       }
     }
 
@@ -327,8 +329,8 @@
       try {
         closeModal();
         recruitedBands = recruitedBands.filter(b => b.id !== bandId);
-        if (Array.isArray(me.bandIds)) {
-          me.bandIds = me.bandIds.filter(id => id !== bandId);
+        if (Array.isArray(me.band_ids)) {
+          me.band_ids = me.band_ids.filter(id => id !== bandId);
         }
 
         refreshUI();
@@ -336,11 +338,11 @@
         await supabaseClient.from('bands').delete().eq('id', bandId);
         await supabaseClient.from('messages').delete().eq('band_id', bandId);
         
-        localStorage.setItem('k_on_me_v10', JSON.stringify(me));
+        localStorage.setItem('k_on_me_v11', JSON.stringify(me));
         const tempMyCloudData = {
           id: me.id, name: me.name, parts: me.parts,
           bio: me.bio ? `${me.bio} 【${me.grade}】` : `【${me.grade}】`,
-          lineId: me.lineId || "", bandIds: [...me.bandIds]
+          lineId: me.lineId || "", band_ids: [...me.band_ids]
         };
         await supabaseClient.from('users').upsert(tempMyCloudData);
       } catch (e) { 
@@ -385,7 +387,8 @@
     }
 
     function makeMemberBadgesHtml(bandId) {
-      const members = allUsers.filter(u => u.bandIds && Array.isArray(u.bandIds) && u.bandIds.includes(bandId));
+      // 【根本修正】集計対象を u.band_ids に修正
+      const members = allUsers.filter(u => u.band_ids && Array.isArray(u.band_ids) && u.band_ids.includes(bandId));
       if (members.length === 0) {
         return `<div class="text-[10px] text-gray-400 italic mt-1.5">メンバー未登録</div>`;
       }
@@ -399,7 +402,7 @@
 
         html += `
           <span class="inline-flex items-center gap-0.5 text-[9px] bg-gray-50 text-gray-700 px-1.5 py-0.5 rounded border border-gray-200/60 font-medium">
-            <span class="font-bold text-gray-900">${m.name}</span>
+            <span class="font-bold text-gray-900">${m.name || '不明'}</span>
             <span class="text-[8px] px-1 rounded-sm border ${gradeColor} font-black scale-90 origin-left">${userGrade}</span>
             <span class="text-orange-600 text-[8px] font-bold">🎸${partsStr}</span>
           </span>
@@ -553,12 +556,12 @@
         `;
         main.innerHTML = html;
 
-        document.getElementById('edit-name').value = me.name;
+        document.getElementById('edit-name').value = me.name || "";
         document.getElementById('edit-line-id').value = me.lineId || ""; 
         document.getElementById('edit-grade').value = me.grade || "新入生";
         document.getElementById('edit-bio').value = me.bio || '';
         document.querySelectorAll('input[name="edit-parts"]').forEach(cb => {
-          if(me.parts.includes(cb.value)) cb.checked = true;
+          if(me.parts && me.parts.includes(cb.value)) cb.checked = true;
         });
 
         document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
@@ -570,15 +573,16 @@
       if (!container) return;
 
       const sortedBands = recruitedBands.map(b => {
-        const matchingUsers = allUsers.filter(u => u.bandIds && Array.isArray(u.bandIds) && u.bandIds.includes(b.id));
-        return { ...b, count: matchingUsers.length, isMyJoined: me.bandIds && me.bandIds.includes(b.id) };
+        // 【根本修正】集計カラム名を band_ids へ変更
+        const matchingUsers = allUsers.filter(u => u.band_ids && Array.isArray(u.band_ids) && u.band_ids.includes(b.id));
+        return { ...b, count: matchingUsers.length, isMyJoined: me.band_ids && me.band_ids.includes(b.id) };
       }).sort((a, b) => {
         const aClosed = a.status === 'closed' ? 1 : 0;
         const bClosed = b.status === 'closed' ? 1 : 0;
         return aClosed - bClosed || b.count - a.count || a.name.localeCompare(b.name);
       });
 
-      const filteredBands = sortedBands.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      const filteredBands = sortedBands.filter(b => b.name && b.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
       let html = "";
       filteredBands.forEach(b => {
@@ -616,11 +620,12 @@
       if (!container) return;
 
       const sortedBands = ARCHIVE_BANDS.map(b => {
-        const matchingUsers = allUsers.filter(u => u.bandIds && Array.isArray(u.bandIds) && u.bandIds.includes(b.id));
-        return { ...b, count: matchingUsers.length, isMyJoined: me.bandIds && me.bandIds.includes(b.id) };
+        // 【根本修正】集計カラム名を band_ids へ変更
+        const matchingUsers = allUsers.filter(u => u.band_ids && Array.isArray(u.band_ids) && u.band_ids.includes(b.id));
+        return { ...b, count: matchingUsers.length, isMyJoined: me.band_ids && me.band_ids.includes(b.id) };
       }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
-      const filteredBands = sortedBands.filter(b => b.name.toLowerCase().includes(archiveSearchQuery.toLowerCase()));
+      const filteredBands = sortedBands.filter(b => b.name && b.name.toLowerCase().includes(archiveSearchQuery.toLowerCase()));
 
       let html = "";
       filteredBands.forEach(b => {
@@ -676,7 +681,8 @@
 
       let html = "";
       filteredUsers.forEach(u => {
-        const userBands = (u.bandIds || []).map(bId => {
+        // 【根本修正】ユーザーが紐づいているバンド配列の参照を band_ids へ変更
+        const userBands = (u.band_ids || []).map(bId => {
           const b = recruitedBands.find(x => x.id === bId) || ARCHIVE_BANDS.find(x => x.id === bId);
           return b ? b.name : null;
         }).filter(Boolean);
@@ -761,8 +767,9 @@
         : recruitedBands.find(b => b.id === bandId);
 
       if(!band) return;
-      const members = allUsers.filter(u => u.bandIds && Array.isArray(u.bandIds) && u.bandIds.includes(bandId));
-      const isMyJoined = me.bandIds && me.bandIds.includes(bandId);
+      // 【根本修正】紐づき抽出を band_ids へ変更
+      const members = allUsers.filter(u => u.band_ids && Array.isArray(u.band_ids) && u.band_ids.includes(bandId));
+      const isMyJoined = me.band_ids && me.band_ids.includes(bandId);
       const isClosed = !isArchive && band.status === 'closed';
 
       document.getElementById('modal-band-name').innerHTML = band.name + (isClosed ? ' <span class="text-xs bg-gray-400 text-white px-1.5 py-0.2 rounded font-black">締切済</span>' : '');
@@ -834,7 +841,7 @@
             const gradeColor = getGradeColor(userGrade);
             return `
               <span class="text-[10px] bg-orange-50 text-orange-700 px-2 py-0.5 rounded-md border border-orange-100 font-medium inline-flex items-center gap-1">
-                ${m.name} <span class="text-[8px] border px-1 rounded-sm ${gradeColor} font-black">${userGrade}</span> (${(m.parts || []).join('/')})
+                ${m.name || '不明'} <span class="text-[8px] border px-1 rounded-sm ${gradeColor} font-black">${userGrade}</span> (${(m.parts || []).join('/')})
               </span>
             `;
           }).join('');
@@ -872,7 +879,7 @@
           html += `
             <div class="flex flex-col items-start space-y-0.5">
               <div class="flex items-center gap-1">
-                <span class="font-bold text-gray-700 text-[10px]">${m.user_name}</span>
+                <span class="font-bold text-gray-700 text-[10px]">${m.user_name || '不明'}</span>
                 <span class="text-[7px] border px-1 rounded-full font-bold ${gradeColor}">${m.user_grade}</span>
                 <span class="text-[8px] text-gray-400">${timeStr}</span>
               </div>
@@ -897,13 +904,14 @@
     }
 
     async function toggleJoin(bandId) {
-      if (me.name === "未設定の部員") return alert('バンドにエントリーするには、先にマイページからプロフィールを設定してください！');
+      if (!me.name || me.name === "未設定の部員") return alert('バンドにエントリーするには、先にマイページからプロフィールを設定してください！');
       
       isSaving = true; 
-      if (!Array.isArray(me.bandIds)) me.bandIds = [];
-      const index = me.bandIds.indexOf(bandId);
-      if (index > -1) me.bandIds.splice(index, 1);
-      else me.bandIds.push(bandId);
+      // 【根本修正】変数・配列の同期先を band_ids に一元化
+      if (!Array.isArray(me.band_ids)) me.band_ids = [];
+      const index = me.band_ids.indexOf(bandId);
+      if (index > -1) me.band_ids.splice(index, 1);
+      else me.band_ids.push(bandId);
       
       refreshUI();
       await saveMyDataToCloud(); 
