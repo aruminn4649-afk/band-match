@@ -15,17 +15,17 @@
       <h1 class="text-xl font-bold text-gray-800 flex items-center gap-1">
         <span class="text-orange-500">🎸</span> バンドマッチ
       </h1>
-      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver 1.04</div>
+      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver 1.08</div>
     </header>
 
     <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-24">
     </main>
 
     <div id="band-modal" class="absolute inset-0 bg-black/50 z-20 hidden flex items-end justify-center">
-      <div class="bg-white w-full rounded-t-2xl p-5 max-h-[85vh] flex flex-col space-y-3 shadow-2xl">
+      <div id="modal-container" class="bg-white w-full rounded-t-2xl p-5 max-h-[92vh] h-auto flex flex-col space-y-3 shadow-2xl transition-all duration-300">
         <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto -mt-2 mb-1 shrink-0"></div>
         
-        <div class="flex justify-between items-start shrink-0">
+        <div id="modal-header-area" class="flex justify-between items-start shrink-0">
           <div>
             <span id="modal-band-type" class="text-[10px] font-bold text-orange-500 tracking-wider">BAND DETAILS</span>
             <h3 id="modal-band-name" class="font-extrabold text-gray-800 text-lg mt-0.5 truncate max-w-[260px]">---</h3>
@@ -43,25 +43,32 @@
         
         <button id="modal-join-btn" class="w-full py-2.5 rounded-xl font-bold text-xs shadow-md transition-all shrink-0"></button>
 
-        <div class="bg-gray-50 border rounded-xl p-2 shrink-0">
+        <div id="modal-part-area" class="bg-gray-50 border rounded-xl p-2 shrink-0">
           <span class="text-[10px] font-bold text-gray-400 block mb-1">現在のパート編成</span>
           <div id="modal-part-summary" class="flex gap-2 flex-wrap text-[10px]"></div>
         </div>
 
-        <div class="border-t border-gray-100 pt-2 shrink-0">
+        <div id="modal-member-area" class="border-t border-gray-100 pt-2 shrink-0">
           <h4 class="font-bold text-[11px] text-gray-500 mb-1 flex items-center gap-1">
-            <i class="fa-solid fa-users text-orange-500"></i> エントリー中のメンバー
+            <i class="fa-solid fa-users text-orange-500"></i> エントリー中のメンバー <span class="text-[9px] font-normal text-gray-400">(タップでプロフィール表示)</span>
           </h4>
           <div id="modal-member-list" class="flex flex-wrap gap-1 max-h-[80px] overflow-y-auto"></div>
         </div>
 
-        <div class="border-t border-gray-100 pt-2 flex-1 flex flex-col min-h-0">
-          <h4 class="font-bold text-[11px] text-gray-500 mb-1 flex items-center gap-1 shrink-0">
-            <i class="fa-solid fa-comments text-orange-500"></i> バンド内作戦会議チャット
-          </h4>
-          <div id="modal-chat-timeline" class="flex-1 overflow-y-auto space-y-2 py-1 bg-gray-50/50 rounded-lg p-2 border border-gray-100"></div>
+        <div id="modal-chat-section" class="border-t border-gray-100 pt-2 flex-1 flex flex-col min-h-[220px]">
+          <div class="flex justify-between items-center mb-1 shrink-0">
+            <h4 class="font-bold text-[11px] text-gray-500 flex items-center gap-1">
+              <i class="fa-solid fa-comments text-orange-500"></i> 作戦会議チャット
+            </h4>
+            <button onclick="toggleChatExpand()" id="chat-expand-btn" class="text-[10px] bg-orange-50 text-orange-600 border border-orange-200 px-2 py-0.5 rounded font-bold hover:bg-orange-100 active:scale-95 transition-all">
+              <i class="fa-solid fa-expand mr-1"></i> チャットを拡大
+            </button>
+          </div>
+          
+          <div id="modal-chat-timeline" class="flex-1 overflow-y-auto space-y-3 py-2 bg-gray-50/50 rounded-lg p-2.5 border border-gray-100"></div>
+          
           <div class="flex gap-1.5 mt-1.5 shrink-0">
-            <input type="text" id="modal-chat-input" autocomplete="off" placeholder="このバンド内で発言..." class="flex-1 text-xs p-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500" onkeypress="if(event.key==='Enter') sendBandChatMessage()"/>
+            <input type="text" id="modal-chat-input" autocomplete="off" placeholder="このバンド内で発言..." class="flex-1 text-xs p-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500" onkeypress="if(event.key==='Enter') sendBandChatMessage()"/>
             <button onclick="sendBandChatMessage()" class="bg-orange-500 text-white text-xs px-3 py-2 rounded-lg font-bold shadow-sm active:bg-orange-600"><i class="fa-solid fa-paper-plane"></i></button>
           </div>
         </div>
@@ -75,7 +82,7 @@
         <i class="fa-solid fa-fire text-base"></i><span class="text-[9px]">自由募集</span>
       </button>
       <button onclick="switchTab('archive')" id="tab-archive" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
-        <i class="fa-solid fa-folder-open text-base"></i><span class="text-[9px]">緩募リスト</span>
+        <i class="fa-solid fa-heart text-base"></i><span class="text-[9px]">好みのバンド</span>
       </button>
       <button onclick="switchTab('search')" id="tab-search" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
         <i class="fa-solid fa-address-book text-base"></i><span class="text-[9px]">部員名簿</span>
@@ -95,7 +102,6 @@
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const FIXED_BANDS = [
-      // --- 邦楽ロック・ポップス（現代〜定番） ---
       { id: "1", name: "YOASOBI コピー" }, { id: "2", name: "RADWIMPS コピー" }, { id: "3", name: "ずっと真夜中でいいのに。 コピー" },
       { id: "4", name: "King Gnu コピー" }, { id: "5", name: "Official髭男dism コピー" }, { id: "6", name: "ヨルシカ コピー" },
       { id: "7", name: "back number コピー" }, { id: "8", name: "スピッツ コピー" }, { id: "9", name: "BUMP OF CHICKEN コピー" },
@@ -128,42 +134,30 @@
       { id: "86", name: "KUZIRA コピー" }, { id: "87", name: "鉄風東京 コピー" }, { id: "88", name: "ルサンチマン コピー" },
       { id: "89", name: "文藝天国 コピー" }, { id: "90", name: "yonige コピー" }, { id: "91", name: "Chilli Beans. コピー" },
       { id: "92", name: "ブランデー戦記 コピー" }, { id: "93", name: "chilldspot コピー" }, { id: "94", name: "TOMOO コピー" },
-      { id: "95", name: "Cody・Lee(李) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
-      { id: "98", name: "リーガルリリー コピー" }, { id: "101", name: "ELLEGARDEN コピー" }, { id: "102", name: "WANIMA コピー" },
-      { id: "103", name: "MAN WITH A MISSION コピー" }, { id: "104", name: "MY FIRST STORY コピー" }, { id: "105", name: "ONE N' ONLY コピー" },
-      { id: "106", name: "Coldrain コピー" }, { id: "107", name: "Crossfaith コピー" }, { id: "108", name: "Fear, and Loathing in Las Vegas コピー" },
-      { id: "109", name: "ROTTENGRAFFTY コピー" }, { id: "110", name: "HEY-SMITH コピー" }, { id: "111", name: "10-FEET コピー" },
-      { id: "112", name: "サンボマスター コピー" }, { id: "113", name: "go!go!vanillas コピー" }, { id: "114", name: "GLIM SPANKY コピー" },
-
-      // --- 洋楽（現代・2000年代オルタナ・ポップス） ---
-      { id: "201", name: "Coldplay コピー" }, { id: "202", name: "Maroon 5 コピー" }, { id: "203", name: "Green Day コピー" },
-      { id: "204", name: "Linkin Park コピー" }, { id: "205", name: "Muse コピー" }, { id: "206", name: "The 1975 コピー" },
-      { id: "207", name: "Arctic Monkeys コピー" }, { id: "208", name: "The Strokes コピー" }, { id: "209", name: "Red Hot Chili Peppers コピー" },
-      { id: "210", name: "Foo Fighters コピー" }, { id: "211", name: "Bring Me The Horizon コピー" }, { id: "212", name: "Weezer コピー" },
-      { id: "213", name: "My Chemical Romance コピー" }, { id: "214", name: "Fall Out Boy コピー" }, { id: "215", name: "Panic! At The Disco コピー" },
-      { id: "216", name: "Paramore コピー" }, { id: "217", name: "AVRIL LAVIGNE コピー" }, { id: "218", name: "Oasis コピー" },
-      { id: "219", name: "Radiohead コピー" }, { id: "220", name: "Blur コピー" }, { id: "221", name: "Gorillaz コピー" },
-      { id: "222", name: "Franz Ferdinand コピー" }, { id: "223", name: "The Killers コピー" }, { id: "224", name: "Maneskin コピー" },
-      { id: "225", name: "Bruno Mars コピー" }, { id: "226", name: "One Direction コピー" }, { id: "227", name: "Foster The People コピー" },
-
-      // --- 古いバンド・レジェンド・クラシックロック（60s〜90s） ---
-      { id: "301", name: "The Beatles コピー" }, { id: "302", name: "Queen コピー" }, { id: "303", name: "Led Zeppelin コピー" },
-      { id: "304", name: "Pink Floyd コピー" }, { id: "305", name: "Nirvana コピー" }, { id: "306", name: "Bon Jovi コピー" },
-      { id: "307", name: "Guns N' Roses コピー" }, { id: "308", name: "Aerosmith コピー" }, { id: "309", name: "AC/DC コピー" },
-      { id: "310", name: "U2 コピー" }, { id: "311", name: "The Rolling Stones コピー" }, { id: "312", name: "The Who コピー" },
-      { id: "313", name: "Deep Purple コピー" }, { id: "314", name: "Black Sabbath コピー" }, { id: "315", name: "Metallica コピー" },
-      { id: "316", name: "Megadeth コピー" }, { id: "317", name: "Van Halen コピー" }, { id: "318", name: "Mr. Big コピー" },
-      { id: "319", name: "Kiss コピー" }, { id: "320", name: "The Police コピー" }, { id: "321", name: "The Smiths コピー" },
-      { id: "322", name: "The Stone Roses コピー" }, { id: "323", name: "The Clash コピー" }, { id: "324", name: "Sex Pistols コピー" },
-      { id: "325", name: "Eric Clapton コピー" }, { id: "326", name: "Jimi Hendrix コピー" }, { id: "327", name: "David Bowie コピー" },
-      { id: "328", name: "BOØWY コピー" }, { id: "329", name: "THE BLUE HEARTS コピー" }, { id: "330", name: "X JAPAN コピー" },
-      { id: "331", name: "L'Arc~en~Ciel コピー" }, { id: "332", name: "GLAY コピー" }, { id: "333", name: "JUDY AND MARY コピー" },
-      { id: "334", name: "THE YELLOW MONKEY コピー" }, { id: "335", name: "ユニコーン コピー" }
+      { id: "95", name: "Cody・Lee(理) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
+      { id: "98", name: "リーガルリリー コピー" }, 
+      { id: "101", name: "Nirvana コピー" }, { id: "102", name: "Green Day コピー" }, { id: "103", name: "Red Hot Chili Peppers コピー" },
+      { id: "104", name: "Oasis コピー" }, { id: "105", name: "Radiohead コピー" }, { id: "106", name: "Coldplay コピー" },
+      { id: "107", name: "Linkin Park コピー" }, { id: "108", name: "Foo Fighters コピー" }, { id: "109", name: "The Strokes コピー" },
+      { id: "110", name: "Arctic Monkeys コピー" }, { id: "111", name: "Maroon 5 コピー" }, { id: "112", name: "Queen コピー" },
+      { id: "113", name: "The 1975 コピー" }, { id: "114", name: "MANESKIN コピー" }, { id: "115", name: "Bring Me The Horizon コピー" }, 
+      { id: "201", name: "ハルカミライ コピー" }, { id: "202", name: "KOTORI コピー" }, { id: "204", name: "Age Factory コピー" }, 
+      { id: "206", name: "さよならポエジー コピー" }, { id: "207", name: "SIX LOUNGE コピー" }, { id: "208", name: "PK shampoo コピー" }, 
+      { id: "209", name: "TRACK15 コピー" }, { id: "210", name: "シャイトープ コピー" }, { id: "211", name: "サバシスター コピー" }, 
+      { id: "212", name: "炙りなタウン コピー" }, { id: "213", name: "健やかなる子ら コピー" }, { id: "214", name: "Blue Mash コピー" }, 
+      { id: "215", name: "アルステイク コピー" },
+      { id: "301", name: "THEE MICHELLE GUN ELEPHANT コピー" }, { id: "302", name: "BLANKEY JET CITY コピー" }, 
+      { id: "303", name: "Hi-STANDARD コピー" }, { id: "305", name: "THE BLUE HEARTS コピー" }, 
+      { id: "306", name: "BOØWY コピー" }, { id: "307", name: "UNICORN コピー" }, { id: "308", name: "REMANG コピー" },
+      { id: "309", name: "L'Arc-en-Ciel コピー" }, { id: "310", name: "GLAY コピー" }, { id: "311", name: "GOING STEADY コピー" }, 
+      { id: "312", name: "MONGOL800 コピー" }, { id: "314", name: "BEAT CRUSADERS コピー" }, 
+      { id: "315", name: "THE HIGH-LOWS コピー" }
     ];
 
     let recruitedBands = [];
     let allChatMessages = []; 
     let allUsers = []; 
+    let isChatExpanded = false;
 
     let myId = localStorage.getItem('k_on_my_id') || 'user_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('k_on_my_id', myId);
@@ -365,10 +359,9 @@
       } catch (e) { console.error(e); }
     }
 
-    // ★★★ パスワード付きデータベース全削除機能 ★★★
     async function resetAllApplicationData() {
       const password = prompt("🔐 管理者パスワードを入力してください:");
-      if (password === null) return; // キャンセルされた場合
+      if (password === null) return; 
       
       if (password !== "Suzu2525") {
         alert("❌ パスワードが違います。リセットを中止しました。");
@@ -383,12 +376,10 @@
 
       isSaving = true;
       try {
-        // 各テーブルから全データを一斉消去
         await supabaseClient.from('messages').delete().neq('id', 'dummy');
         await supabaseClient.from('bands').delete().neq('id', 'dummy');
         await supabaseClient.from('users').delete().neq('id', 'dummy');
 
-        // ローカルに保存されている自分のプロフィールもクリア
         localStorage.removeItem('k_on_me_final');
         localStorage.removeItem('k_on_my_id');
 
@@ -409,26 +400,61 @@
       return "bg-green-50 text-green-600 border-green-100";
     }
 
+    // メンバープロフィール画面へジャンプする処理
+    window.jumpToUserProfile = function(userName) {
+      if (!userName || userName === "不明" || userName === "未設定の部員") return;
+      // イベントのバブリング（親要素のクリックイベント連動）を防ぐ
+      if (event) event.stopPropagation();
+      
+      // モーダルが開いていたら閉じる
+      closeModal();
+      
+      // 検索クエリにユーザー名をセットして部員名簿タブへ切り替え
+      userSearchQuery = userName;
+      switchTab('search');
+    }
+
+    function makePartSummaryHtml(members) {
+      const partCounts = { 'ボーカル': 0, 'ギター': 0, 'ベース': 0, 'ドラム': 0, 'キーボード': 0 };
+      members.forEach(m => {
+        if (m.parts) m.parts.forEach(p => { if (p in partCounts) partCounts[p]++; });
+      });
+
+      let html = `<div class="flex gap-1.5 flex-wrap text-[8px] mt-1">`;
+      Object.entries(partCounts).forEach(([part, count]) => {
+        if (count > 0) {
+          html += `<span class="px-1 py-0.2 bg-orange-50 text-orange-600 font-bold border border-orange-100 rounded">${part}:${count}</span>`;
+        }
+      });
+      html += `</div>`;
+      return html;
+    }
+
     function makeMemberBadgesHtml(bandId) {
       const members = allUsers.filter(u => u.band_ids && u.band_ids.includes(bandId));
       if (members.length === 0) {
         return `<div class="text-[10px] text-gray-400 italic mt-1.5 pl-1">エントリー未登録</div>`;
       }
 
-      let html = `<div class="flex flex-wrap gap-1 mt-2 border-t border-gray-50 pt-1.5">`;
+      const summaryHtml = makePartSummaryHtml(members);
+      let html = `<div class="flex flex-col mt-2 border-t border-gray-50 pt-1.5 gap-1">`;
+      html += summaryHtml;
+      
+      html += `<div class="flex flex-wrap gap-1 mt-1">`;
       members.forEach(m => {
         const partsStr = (m.parts || []).join('/');
         const gradeColor = getGradeColor(m.grade);
+        const escapedName = (m.name || '不明').replace(/'/g, "\\'");
 
         html += `
-          <span class="inline-flex items-center gap-0.5 text-[9px] bg-gray-50 text-gray-700 px-1.5 py-0.5 rounded border border-gray-200/60 font-medium">
-            <span class="font-bold text-gray-900">${m.name || '不明'}</span>
+          <span onclick="jumpToUserProfile('${escapedName}')" class="inline-flex items-center gap-0.5 text-[9px] bg-gray-50 hover:bg-orange-50 text-gray-700 hover:text-orange-600 px-1.5 py-0.5 rounded border border-gray-200/60 font-medium cursor-pointer transition-all">
+            <span class="font-bold text-gray-900 hover:text-orange-600">${m.name || '不明'}</span>
             <span class="text-[8px] px-1 rounded-sm border ${gradeColor} font-black scale-90 origin-left">${m.grade || '新入生'}</span>
             <span class="text-orange-600 text-[8px] font-bold">🎸${partsStr}</span>
           </span>
         `;
       });
-      html += `</div>`;
+      html += `</div></div>`;
       return html;
     }
 
@@ -476,9 +502,9 @@
           <div class="space-y-4">
             <div class="sticky top-0 bg-gray-50 pt-1 pb-1 z-10 space-y-2">
               <div class="bg-gray-100 p-2 rounded-xl border">
-                <span class="text-xs font-bold text-gray-600 pl-1">📋 固定緩募バンドリスト(${FIXED_BANDS.length}組)</span>
+                <span class="text-xs font-bold text-gray-600 pl-1">📋 好みのバンド (${FIXED_BANDS.length}組)</span>
               </div>
-              <input type="text" id="archive-search-input" autocomplete="off" placeholder="緩募バンドを検索..." class="w-full text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
+              <input type="text" id="archive-search-input" autocomplete="off" placeholder="好みのバンドを検索..." class="w-full text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
             </div>
             <div id="archive-list-container" class="grid gap-2"></div>
           </div>
@@ -628,7 +654,11 @@
       container.innerHTML = html || `<p class="text-center text-xs text-gray-400 py-8">募集中の自由バンドはありません</p>`;
 
       container.querySelectorAll('.band-card').forEach(card => {
-        card.onclick = () => openModal(card.dataset.bandId);
+        card.onclick = (e) => {
+          // メンバーバッジ自体をクリックした場合はモーダルを開かない
+          if (e.target.closest('[onclick^="jumpToUserProfile"]')) return;
+          openModal(card.dataset.bandId);
+        };
       });
     }
 
@@ -651,7 +681,7 @@
               <div class="flex-1 pr-2 overflow-hidden">
                 <h4 class="font-bold text-gray-800 text-sm truncate">${b.name}</h4>
                 <div class="flex items-center gap-2 mt-0.5">
-                  <span class="text-[9px] text-gray-400">📁 緩募アイテム</span>
+                  <span class="text-[9px] text-gray-400">❤️ 好みのバンドアイテム</span>
                   ${b.isMyJoined ? `<span class="text-[9px] bg-orange-500 text-white px-1.5 py-0.2 rounded-full font-medium">エントリー中</span>` : ''}
                 </div>
               </div>
@@ -666,7 +696,10 @@
       container.innerHTML = html;
 
       container.querySelectorAll('.band-card').forEach(card => {
-        card.onclick = () => openModal(card.dataset.bandId);
+        card.onclick = (e) => {
+          if (e.target.closest('[onclick^="jumpToUserProfile"]')) return;
+          openModal(card.dataset.bandId);
+        };
       });
     }
 
@@ -763,9 +796,62 @@
 
     function openModal(bandId) {
       currentSelectedBandId = bandId;
+      isChatExpanded = false;
+      
+      const container = document.getElementById('modal-container');
+      container.classList.remove('h-[90vh]');
+      container.classList.add('h-auto');
+
+      document.getElementById('modal-header-area').classList.remove('hidden');
+      document.getElementById('modal-join-btn').classList.remove('hidden');
+      document.getElementById('modal-part-area').classList.remove('hidden');
+      document.getElementById('modal-member-area').classList.remove('hidden');
+      document.getElementById('chat-expand-btn').innerHTML = '<i class="fa-solid fa-expand mr-1"></i> チャットを拡大';
+
       updateModalOnly(bandId);
       document.getElementById('band-modal').classList.remove('hidden');
-      setTimeout(scrollChatToBottom, 80);
+      setTimeout(scrollChatToBottom, 120);
+    }
+
+    window.toggleChatExpand = function() {
+      isChatExpanded = !isChatExpanded;
+      const container = document.getElementById('modal-container');
+      const headerArea = document.getElementById('modal-header-area');
+      const adminArea = document.getElementById('modal-admin-actions');
+      const joinBtn = document.getElementById('modal-join-btn');
+      const partArea = document.getElementById('modal-part-area');
+      const memberArea = document.getElementById('modal-member-area');
+      const expandBtn = document.getElementById('chat-expand-btn');
+
+      if (isChatExpanded) {
+        container.classList.remove('h-auto');
+        container.classList.add('h-[90vh]');
+
+        headerArea.classList.add('hidden');
+        adminArea.classList.add('hidden');
+        joinBtn.classList.add('hidden');
+        partArea.classList.add('hidden');
+        memberArea.classList.add('hidden');
+        expandBtn.innerHTML = '<i class="fa-solid fa-compress mr-1"></i> 戻す';
+      } else {
+        container.classList.remove('h-[90vh]');
+        container.classList.add('h-auto');
+
+        headerArea.classList.remove('hidden');
+        joinBtn.classList.remove('hidden');
+        partArea.classList.remove('hidden');
+        memberArea.classList.remove('hidden');
+        expandBtn.innerHTML = '<i class="fa-solid fa-expand mr-1"></i> チャットを拡大';
+        
+        const isCustom = currentSelectedBandId.startsWith('band_');
+        if (isCustom) {
+          const band = recruitedBands.find(b => b.id === currentSelectedBandId);
+          if (band && band.creator_id === me.id) {
+            adminArea.classList.remove('hidden');
+          }
+        }
+      }
+      setTimeout(scrollChatToBottom, 50);
     }
 
     function updateModalOnly(bandId) {
@@ -780,14 +866,14 @@
       const isMyJoined = me.band_ids.includes(bandId);
       const isClosed = isCustom && band.status === 'closed';
 
-      document.getElementById('modal-band-type').innerText = isCustom ? '自由追加募集アイテム' : '固定緩募アイテム';
+      document.getElementById('modal-band-type').innerText = isCustom ? '自由追加募集アイテム' : '好みのバンドアイテム';
       document.getElementById('modal-band-name').innerText = band.name;
-      document.getElementById('modal-band-creator').innerText = isCustom ? `募集主: ${band.creator_name || '不明'}` : '固定リスト';
+      document.getElementById('modal-band-creator').innerText = isCustom ? `募集主: ${band.creator_name || '不明'}` : '好みのバンドリスト';
       document.getElementById('modal-band-count').innerText = isClosed ? '🔒 締切済' : `🔥 ${members.length}人`;
 
       const adminActions = document.getElementById('modal-admin-actions');
       if (isCustom && band.creator_id === me.id) {
-        adminActions.classList.remove('hidden');
+        if (!isChatExpanded) adminActions.classList.remove('hidden');
         const statusBtn = document.getElementById('modal-toggle-status-btn');
         if (isClosed) {
           statusBtn.innerText = '🔓 募集を再開する';
@@ -833,8 +919,9 @@
         ? `<p class="text-[11px] text-gray-400 italic w-full text-center py-2">誰も選択していません</p>` 
         : members.map(m => {
             const gradeColor = getGradeColor(m.grade);
+            const escapedName = (m.name || '不明').replace(/'/g, "\\'");
             return `
-              <div class="inline-flex items-center gap-1 bg-orange-50/70 border border-orange-100 px-2 py-1 rounded-lg text-xs">
+              <div onclick="jumpToUserProfile('${escapedName}')" class="inline-flex items-center gap-1 bg-orange-50/70 hover:bg-orange-100 border border-orange-100 px-2 py-1 rounded-lg text-xs cursor-pointer transition-all">
                 <span class="font-bold text-gray-800">${m.name}</span>
                 <span class="text-[8px] px-1 rounded border ${gradeColor} font-black scale-90">${m.grade || '新入生'}</span>
                 <span class="text-[9px] text-orange-600 font-semibold">${(m.parts || []).join('/')}</span>
@@ -859,13 +946,14 @@
       chatTimeline.innerHTML = filteredMsgs.map(m => {
         const isMe = m.user_id === myId;
         const gradeColor = getGradeColor(m.user_grade);
+        const escapedName = (m.user_name || '不明').replace(/'/g, "\\'");
         return `
-          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5">
-            <div class="flex items-center gap-1 text-[9px] text-gray-400">
-              <span class="font-bold text-gray-600">${m.user_name}</span>
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-1">
+            <div onclick="jumpToUserProfile('${escapedName}')" class="flex items-center gap-1 text-[10px] text-gray-400 px-0.5 cursor-pointer hover:text-orange-500 transition-all">
+              <span class="font-bold text-gray-600 hover:text-orange-500">${m.user_name}</span>
               <span class="px-1 rounded border ${gradeColor} font-black scale-75 origin-left">${m.user_grade || '新入生'}</span>
             </div>
-            <div class="p-2 rounded-xl text-xs max-w-[85%] break-words shadow-sm ${isMe ? 'bg-orange-500 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'}">
+            <div class="p-2.5 rounded-2xl text-xs max-w-[85%] break-words shadow-sm leading-relaxed ${isMe ? 'bg-orange-500 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'}">
               ${m.text}
             </div>
           </div>
@@ -893,7 +981,6 @@
       await saveMyDataToCloud();
     }
 
-    // 初回レンダリング
     render();
   </script>
 </body>
