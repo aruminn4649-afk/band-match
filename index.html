@@ -20,7 +20,7 @@
           <span class="text-orange-500">🎸</span> TMSバンドマッチ
         </h1>
       </div>
-      <div id="version-badge" class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver: 1.34</div>
+      <div id="version-badge" class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver: 1.36</div>
     </header>
 
     <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-24">
@@ -32,13 +32,13 @@
           <h3 class="font-extrabold text-gray-800 text-sm flex items-center gap-1">
             <i class="fa-solid fa-wrench text-orange-500"></i> アップデート履歴
           </h3>
-          <span class="text-[10px] font-bold text-gray-400">最新: Ver 1.34</span>
+          <span class="text-[10px] font-bold text-gray-400">最新: Ver 1.36</span>
         </div>
         <div class="text-xs text-gray-600 space-y-3 max-h-[60vh] overflow-y-auto pr-1">
           <div>
-            <span class="font-bold text-orange-600 block">■ Ver 1.34 (今回)</span>
+            <span class="font-bold text-orange-600 block">■ Ver 1.36 (今回)</span>
             <p class="pl-2 text-[11px] text-gray-700 leading-relaxed">
-              ・Supabaseのカラム名（band_ids）の不一致バグを完全修正。プロフィール保存、カウント連動、募集の消滅をすべて解決しました。
+              ・SupabaseのDB型エラーを回避するため、band_idsのデータ通信を文字列・配列どちらにも互換性があるセーフティ仕様に全面改修しました。
             </p>
           </div>
         </div>
@@ -103,7 +103,7 @@
         <i class="fa-solid fa-folder-open text-base"></i><span class="text-[9px]">緩募リスト</span>
       </button>
       <button onclick="switchTab('search')" id="tab-search" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
-        <i class="fa-solid fa-address-book text-base"></i><span class="text-[9px]">部員名簿</span>
+        <i class="fa-solidxl fa-address-book text-base"></i><span class="text-[9px]">部員名簿</span>
       </button>
       <button onclick="switchTab('mypage')" id="tab-mypage" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
         <i class="fa-solid fa-user text-base"></i><span class="text-[9px]">マイページ</span>
@@ -160,21 +160,9 @@
     let myId = localStorage.getItem('k_on_my_id') || 'user_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('k_on_my_id', myId);
 
-    // 【根本修正】変数名をすべてサーバー側の実態 band_ids に変更
     let me = { id: myId, name: "未設定の部員", grade: "新入生", parts: ["ギター"], bio: "設定を変更して使ってください！", lineId: "", band_ids: [] };
     if(localStorage.getItem('k_on_me_v11')) {
       me = JSON.parse(localStorage.getItem('k_on_me_v11'));
-    } else if(localStorage.getItem('k_on_me_v10')) {
-      // 互換性救済
-      const old = JSON.parse(localStorage.getItem('k_on_me_v10'));
-      if(old) {
-        me.name = old.name || me.name;
-        me.grade = old.grade || me.grade;
-        me.parts = old.parts || me.parts;
-        me.bio = old.bio || me.bio;
-        me.lineId = old.lineId || me.lineId;
-        me.band_ids = old.band_ids || old.bandIds || [];
-      }
     }
 
     let allUsers = []; 
@@ -185,12 +173,47 @@
     let currentSelectedBandId = null;
     let isSaving = false;
 
-    async function loadData() {
-      if (isSaving) return;
+    // Supabaseから降ってくるband_idsを安全に配列にパースするヘルパー
+    function parseBandIds(rawIds) {
+      if (!rawIds) return [];
+      if (Array.isArray(rawIds)) return rawIds;
+      if (typeof rawIds === 'string') {
+        if (rawIds.startsWith('[') && rawIds.endsWith(']')) {
+          try { return JSON.parse(rawIds); } catch(e) {}
+        }
+        return rawIds.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      return [];
+    }
+
+    async function loadData(force = false) {
+      if (isSaving && !force) return;
       try {
         const { data: userData, error: userError } = await supabaseClient.from('users').select('*');
         if (!userError && userData) {
-          allUsers = userData;
+          // 取得した全ユーザーのband_idsを安全に配列化
+          allUsers = userData.map(u => ({
+            ...u,
+            band_ids: parseBandIds(u.band_ids)
+          }));
+
+          const myCloudData = allUsers.find(u => u.id === myId);
+          if (myCloudData) {
+            me.name = myCloudData.name || me.name;
+            me.lineId = myCloudData.lineId || me.lineId;
+            me.parts = myCloudData.parts || me.parts;
+            me.band_ids = myCloudData.band_ids || [];
+            if (myCloudData.bio) {
+              const match = myCloudData.bio.match(/【(.*?)】$/);
+              if (match) {
+                me.grade = match[1];
+                me.bio = myCloudData.bio.replace(/ 【.*?】$/, "");
+              } else {
+                me.bio = myCloudData.bio;
+              }
+            }
+            localStorage.setItem('k_on_me_v11', JSON.stringify(me));
+          }
         }
 
         const { data: bandData, error: bandError } = await supabaseClient.from('bands').select('*');
@@ -218,8 +241,8 @@
       if (currentSelectedBandId) updateModalOnly(currentSelectedBandId);
     }
 
-    setInterval(loadData, 3000);
-    loadData();
+    setInterval(() => { loadData(false); }, 3000);
+    loadData(true);
 
     async function saveMyDataToCloud() {
       isSaving = true;
@@ -227,21 +250,23 @@
       
       const targetBandIds = Array.isArray(me.band_ids) ? [...me.band_ids] : [];
       
-      // 【根本修正】送出するキー名称を確実に「band_ids」へ変更
+      // DBカラムがtext型（文字列）でもエラーを吐かないようカンマ区切りの文字列を最優先でセット
+      const cloudBandIdsValue = targetBandIds.join(',');
+
       const tempMyCloudData = {
         id: me.id,
         name: me.name || "未設定の部員",
         parts: me.parts || ["ギター"],
         bio: me.bio ? `${me.bio} 【${me.grade}】` : `【${me.grade}】`,
         lineId: me.lineId || "", 
-        band_ids: targetBandIds
+        band_ids: cloudBandIdsValue // 文字列として送信
       };
 
       const myIndex = allUsers.findIndex(u => u.id === myId);
       if (myIndex > -1) {
-        allUsers[myIndex] = tempMyCloudData;
+        allUsers[myIndex] = { ...tempMyCloudData, band_ids: targetBandIds };
       } else {
-        allUsers.push(tempMyCloudData);
+        allUsers.push({ ...tempMyCloudData, band_ids: targetBandIds });
       }
       refreshUI();
 
@@ -251,6 +276,7 @@
         console.error(e); 
       } finally {
         isSaving = false;
+        await loadData(true);
       }
     }
 
@@ -288,10 +314,12 @@
         await supabaseClient.from('bands').insert(newBandData);
         
         localStorage.setItem('k_on_me_v11', JSON.stringify(me));
+        
+        const cloudBandIdsValue = me.band_ids.join(',');
         const tempMyCloudData = {
           id: me.id, name: me.name, parts: me.parts,
           bio: me.bio ? `${me.bio} 【${me.grade}】` : `【${me.grade}】`,
-          lineId: me.lineId || "", band_ids: [...me.band_ids]
+          lineId: me.lineId || "", band_ids: cloudBandIdsValue
         };
         await supabaseClient.from('users').upsert(tempMyCloudData);
       } catch (e) { 
@@ -299,7 +327,7 @@
       } finally {
         isSaving = false; 
         if (bandNameInput) bandNameInput.value = "";
-        loadData();
+        await loadData(true);
       }
     }
 
@@ -319,6 +347,7 @@
         console.error(e); 
       } finally {
         isSaving = false; 
+        await loadData(true);
       }
     }
 
@@ -339,16 +368,18 @@
         await supabaseClient.from('messages').delete().eq('band_id', bandId);
         
         localStorage.setItem('k_on_me_v11', JSON.stringify(me));
+        const cloudBandIdsValue = me.band_ids.join(',');
         const tempMyCloudData = {
           id: me.id, name: me.name, parts: me.parts,
           bio: me.bio ? `${me.bio} 【${me.grade}】` : `【${me.grade}】`,
-          lineId: me.lineId || "", band_ids: [...me.band_ids]
+          lineId: me.lineId || "", band_ids: cloudBandIdsValue
         };
         await supabaseClient.from('users').upsert(tempMyCloudData);
       } catch (e) { 
         console.error(e); 
       } finally {
         isSaving = false;
+        await loadData(true);
       }
     }
 
@@ -387,7 +418,6 @@
     }
 
     function makeMemberBadgesHtml(bandId) {
-      // 【根本修正】集計対象を u.band_ids に修正
       const members = allUsers.filter(u => u.band_ids && Array.isArray(u.band_ids) && u.band_ids.includes(bandId));
       if (members.length === 0) {
         return `<div class="text-[10px] text-gray-400 italic mt-1.5">メンバー未登録</div>`;
@@ -573,7 +603,6 @@
       if (!container) return;
 
       const sortedBands = recruitedBands.map(b => {
-        // 【根本修正】集計カラム名を band_ids へ変更
         const matchingUsers = allUsers.filter(u => u.band_ids && Array.isArray(u.band_ids) && u.band_ids.includes(b.id));
         return { ...b, count: matchingUsers.length, isMyJoined: me.band_ids && me.band_ids.includes(b.id) };
       }).sort((a, b) => {
@@ -620,7 +649,6 @@
       if (!container) return;
 
       const sortedBands = ARCHIVE_BANDS.map(b => {
-        // 【根本修正】集計カラム名を band_ids へ変更
         const matchingUsers = allUsers.filter(u => u.band_ids && Array.isArray(u.band_ids) && u.band_ids.includes(b.id));
         return { ...b, count: matchingUsers.length, isMyJoined: me.band_ids && me.band_ids.includes(b.id) };
       }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
@@ -681,7 +709,6 @@
 
       let html = "";
       filteredUsers.forEach(u => {
-        // 【根本修正】ユーザーが紐づいているバンド配列の参照を band_ids へ変更
         const userBands = (u.band_ids || []).map(bId => {
           const b = recruitedBands.find(x => x.id === bId) || ARCHIVE_BANDS.find(x => x.id === bId);
           return b ? b.name : null;
@@ -767,7 +794,6 @@
         : recruitedBands.find(b => b.id === bandId);
 
       if(!band) return;
-      // 【根本修正】紐づき抽出を band_ids へ変更
       const members = allUsers.filter(u => u.band_ids && Array.isArray(u.band_ids) && u.band_ids.includes(bandId));
       const isMyJoined = me.band_ids && me.band_ids.includes(bandId);
       const isClosed = !isArchive && band.status === 'closed';
@@ -907,7 +933,6 @@
       if (!me.name || me.name === "未設定の部員") return alert('バンドにエントリーするには、先にマイページからプロフィールを設定してください！');
       
       isSaving = true; 
-      // 【根本修正】変数・配列の同期先を band_ids に一元化
       if (!Array.isArray(me.band_ids)) me.band_ids = [];
       const index = me.band_ids.indexOf(bandId);
       if (index > -1) me.band_ids.splice(index, 1);
