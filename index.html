@@ -12,10 +12,10 @@
   <div class="w-full max-w-md mx-auto h-screen bg-gray-50 flex flex-col relative overflow-hidden shadow-2xl">
     
     <header class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10 flex justify-between items-center">
-      <h1 class="text-xl font-bold text-gray-800 flex items-center gap-1">
-        <span class="text-orange-500">🎸</span> バンドマッチ
+      <h1 class="text-xl font-bold text-gray-800">
+        バンドマッチ
       </h1>
-      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">自由募集対応版</div>
+      <div id="sub-title-tag" class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">自由募集</div>
     </header>
 
     <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-24">
@@ -29,15 +29,13 @@
             <span class="text-[10px] font-bold text-orange-500 tracking-wider">BAND DETAILS</span>
             <h3 id="modal-band-name" class="font-extrabold text-gray-800 text-xl mt-0.5">---</h3>
           </div>
-          <div id="modal-band-count" class="bg-orange-500 text-white px-3 py-1 rounded-full font-black text-sm">🔥 0人</div>
+          <div id="modal-band-count" class="bg-orange-500 text-white px-3 py-1 rounded-full font-black text-sm">0人</div>
         </div>
         
         <button id="modal-join-btn" class="w-full py-3 rounded-xl font-bold text-sm shadow-md transition-all"></button>
 
         <div class="border-t border-gray-100 pt-3">
-          <h4 class="font-bold text-xs text-gray-500 mb-2 flex items-center gap-1">
-            <i class="fa-solid fa-users text-orange-500"></i> エントリー中のメンバー
-          </h4>
+          <h4 class="font-bold text-xs text-gray-500 mb-2">エントリー中のメンバー</h4>
           <div id="modal-member-list" class="space-y-2 max-h-[35vh] overflow-y-auto pr-1"></div>
         </div>
         <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-semibold">閉じる</button>
@@ -45,11 +43,14 @@
     </div>
 
     <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 h-16 flex justify-around items-center z-10">
-      <button onclick="switchTab('home')" id="tab-home" class="flex flex-col items-center gap-1 text-orange-500 font-bold flex-1 py-2">
-        <i class="fa-solid fa-fire text-lg"></i><span class="text-[10px]">バンド一覧</span>
+      <button onclick="switchTab('custom')" id="tab-custom" class="flex flex-col items-center gap-1 text-orange-500 font-bold flex-1 py-2">
+        <i class="fa-solid fa-pen-to-square text-lg"></i><span class="text-[10px]">自由募集</span>
       </button>
-      <button onclick="switchTab('search')" id="tab-search" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
-        <i class="fa-solid fa-magnifying-glass text-lg"></i><span class="text-[10px]">マイ登録状況</span>
+      <button onclick="switchTab('static')" id="tab-static" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
+        <i class="fa-solid fa-list text-lg"></i><span class="text-[10px]">緩募リスト</span>
+      </button>
+      <button onclick="switchTab('members')" id="tab-members" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
+        <i class="fa-solid fa-users text-lg"></i><span class="text-[10px]">部員名簿</span>
       </button>
       <button onclick="switchTab('mypage')" id="tab-mypage" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
         <i class="fa-solid fa-user text-lg"></i><span class="text-[10px]">マイページ</span>
@@ -65,8 +66,8 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzb250bHVwd3J2bW10aHNvdmF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDQ3NTcsImV4cCI6MjA5NDUyMDc1N30.DTGclEZKMoFNAwZPPdNOMjEtDVVpw4s-D_jwRaL8MZc";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 固定バンドリスト（重複排除済みの288組）
-    const STATIC_BANDS = [
+    // 固定バンドリスト（重複のない完全版 285組）
+    const STATIC_BANDS_LIST = [
       { id: "1", name: "YOASOBI コピー" }, { id: "2", name: "RADWIMPS コピー" }, { id: "3", name: "ずっと真夜中でいいのに。 コピー" },
       { id: "4", name: "King Gnu コピー" }, { id: "5", name: "Official髭男dism コピー" }, { id: "6", name: "ヨルシカ コピー" },
       { id: "7", name: "back number コピー" }, { id: "8", name: "スピッツ コピー" }, { id: "9", name: "BUMP OF CHICKEN コピー" },
@@ -100,71 +101,72 @@
       { id: "89", name: "文藝天国 コピー" }, { id: "90", name: "yonige コピー" }, { id: "91", name: "Chilli Beans. コピー" },
       { id: "92", name: "ブランデー戦記 コピー" }, { id: "93", name: "chilldspot コピー" }, { id: "94", name: "TOMOO コピー" },
       { id: "95", name: "Cody・Lee(理) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
-      { id: "98", name: "リーガルリリー コピー" }, { id: "99", name: "Kroi コピー" }, { id: "100", name: "wacci コピー" }, 
-      { id: "101", name: "サンボマスター コピー" }, { id: "102", name: "10-FEET コピー" }, { id: "103", name: "MAN WITH A MISSION コピー" }, 
-      { id: "104", name: "ELLEGARDEN コピー" }, { id: "105", name: "the pillows コピー" }, { id: "106", name: "GLAY コピー" }, 
-      { id: "107", name: "L'Arc~en~Ciel コピー" }, { id: "108", name: "X JAPAN コピー" }, { id: "109", name: "LUNA SEA コピー" }, 
-      { id: "110", name: "BOØWY コピー" }, { id: "111", name: "JUDY AND MARY コピー" }, { id: "112", name: "LINDBERG コピー" }, 
-      { id: "113", name: "REGINA コピー" }, { id: "114", name: "THE BLUE HEARTS コピー" }, { id: "115", name: "THE HIGH-LOWS コピー" }, 
-      { id: "116", name: "ザ・クロマニヨンズ コピー" }, { id: "117", name: "ウルフルズ コピー" }, { id: "118", name: "ユニコーン コピー" }, 
-      { id: "119", name: "PRINCESS PRINCESS コピー" }, { id: "120", name: "SHOW-YA コピー" }, { id: "121", name: "TRICERATOPS コピー" }, 
-      { id: "122", name: "GRAPEVINE コピー" }, { id: "124", name: "SUPERCAR コピー" }, { id: "125", name: "BLANKEY JET CITY コピー" }, 
-      { id: "126", name: "THE MICHELLE GUN ELEPHANT コピー" }, { id: "127", name: "the HIATUS コピー" }, { id: "128", name: "MONOEYES コピー" }, 
-      { id: "129", name: "coldrain コピー" }, { id: "130", name: "Crossfaith コピー" }, { id: "131", name: "Crystal Lake コピー" }, 
-      { id: "132", name: "ROTTENGRAFFTY コピー" }, { id: "133", name: "HEY-SMITH コピー" }, { id: "134", name: "Ken Yokoyama コピー" }, 
-      { id: "135", name: "Hi-STANDARD コピー" }, { id: "136", name: "HAWAIIAN6 コピー" }, { id: "137", name: "LOCOFRANK コピー" }, 
-      { id: "138", name: "OVER ARM THROW コピー" }, { id: "139", name: "COUNTRY YARD コピー" }, { id: "140", name: "SHANK コピー" }, 
-      { id: "141", name: "G-FREAK FACTORY コピー" }, { id: "142", name: "SHIMA コピー" }, { id: "143", name: "Northern19 コピー" }, 
-      { id: "144", name: "TOTALFAT コピー" }, { id: "145", name: "BIGMAMA コピー" }, { id: "146", name: "GOOD4NOTHING コピー" }, 
-      { id: "147", name: "EGG BRAIN コピー" }, { id: "148", name: "THE SNEAKERS コピー" }, { id: "149", name: "dustbox コピー" }, 
-      { id: "151", name: "SABOTEN コピー" }, { id: "152", name: "PAN コピー" }, { id: "153", name: " there is a light that never goes out コピー" }, 
-      { id: "154", name: "ENTH コピー" }, { id: "155", name: "SPARK SOUND SHOW コピー" }, { id: "156", name: "Track's コピー" }, 
-      { id: "157", name: "Maki コピー" }, { id: "158", name: "SideChest コピー" }, { id: "159", name: "Atomic Skipper コピー" }, 
-      { id: "160", name: "KOTORI コピー" }, { id: "161", name: "Age Factory コピー" }, { id: "162", name: "GEZAN コピー" }, 
-      { id: "163", name: "NOT WONK コピー" }, { id: "164", name: "DYGL コピー" }, { id: "165", name: "The Birthday コピー" }, 
-      { id: "166", name: "ROSSO コピー" }, { id: "168", name: "MO'SOME TONEBENDER コピー" }, { id: "169", name: "ART-SCHOOL コピー" }, 
-      { id: "170", name: "BURGER NUDS コピー" }, { id: "171", name: "Good Dog Happy Men コピー" }, { id: "172", name: "People In The Box コピー" }, 
-      { id: "173", name: "plenty コピー" }, { id: "174", name: "Galileo Galilei コピー" }, { id: "175", name: "BBHF コピー" }, 
-      { id: "176", name: "warbear コピー" }, { id: "177", name: "sleepy.ab コピー" }, { id: "179", name: "avengers in sci-fi コピー" }, 
-      { id: "180", name: "the telephones コピー" }, { id: "181", name: "POLYSICS コピー" }, { id: "182", name: "DE DE MOUSE コピー" }, 
-      { id: "183", name: "the band apart コピー" }, { id: "184", name: "toe コピー" }, { id: "185", name: "LITE コピー" }, 
-      { id: "186", name: "SPECIAL OTHERS コピー" }, { id: "187", name: "toconoma コピー" }, { id: "188", name: "jizue コピー" }, 
-      { id: "189", name: "mouse on the keys コピー" }, { id: "190", name: "fox capture plan コピー" }, { id: "191", name: "mudy on the 昨晩 コピー" }, 
-      { id: "192", name: "cinema staff コピー" }, { id: "193", name: "アルカラ コピー" }, { id: "194", name: "Gacharic Spin コピー" }, 
-      { id: "195", name: "NEMOPHILA コピー" }, { id: "196", name: "BAND-MAID コピー" }, { id: "197", name: "LOVEBITES コピー" }, 
-      { id: "198", name: "Aldious コピー" }, { id: "199", name: "SCANDAL コピー" }, { id: "200", name: "赤い公園 コピー" }, 
-      { id: "202", name: "Nothing's Carved In Stone コピー" }, { id: "203", name: "ZAZEN BOYS コピー" }, { id: "204", name: "KIMONOS コピー" }, 
-      { id: "205", name: "電気グルーヴ コピー" }, { id: "206", name: "capsule コピー" }, { id: "207", name: "Perfume コピー" }, 
-      { id: "208", name: "BABYMETAL コピー" }, { id: "209", name: "PassCode コピー" }, { id: "210", name: "BiSH コピー" }, 
-      { id: "212", name: "EMPiRE コピー" }, { id: "213", name: "豆柴の大群 コピー" }, { id: "214", name: "GANG PARADE コピー" }, 
-      { id: "215", name: "ASP コピー" }, { id: "216", name: "ExWHYZ コピー" }, { id: "218", name: "チームしゃちほこ コピー" }, 
-      { id: "219", name: "私立恵比寿中学 コピー" }, { id: "220", name: "ももいろクローバーZ コピー" }, { id: "221", name: "でんぱ組.inc コピー" }, 
-      { id: "222", name: "虹のコンキスタドール コピー" }, { id: "223", name: "わーすた コピー" }, { id: "224", name: "フィロソフィーのダンス コピー" }, 
-      { id: "225", name: "CYNHN コピー" }, { id: "226", name: "sora tob sakana コピー" }, { id: "227", name: "Maison book girl コピー" }, 
-      { id: "228", name: "ヤルヴィスト コピー" }, { id: "229", name: "BiS1st コピー" }, { id: "230", name: "ゆるめるモ! コピー" }, 
-      { id: "231", name: "おやすみホログラム コピー" }, { id: "232", name: "・・・・・・・・・ コピー" }, { id: "233", name: "NECRONOMIDOL コピー" }, 
-      { id: "234", name: "じゅじゅ コピー" }, { id: "235", name: "コショージメグミ コピー" }, { id: "236", name: "ベルハーモニー コピー" }, 
-      { id: "237", name: "ヤなことそっとミュート コピー" }, { id: "238", name: "amiinA コピー" }, { id: "239", name: "クマリデパート コピー" }, 
-      { id: "240", name: "クロスノエシス コピー" }, { id: "241", name: "キングサリ コピー" }, { id: "242", name: "タイトル未定 コピー" }, 
-      { id: "243", name: "fishbowl コピー" }, { id: "244", name: "開歌-かいか- コピー" }, { id: "245", name: "I's コピー" }, 
-      { id: "246", name: "悪魔のキッス コピー" }, { id: "247", name: "戦慄かなの コピー" }, { id: "248", name: "かてぃ コピー" }, 
-      { id: "249", name: "ZOC コピー" }, { id: "250", name: "METAMUSE コピー" }, { id: "251", name: "MAPA コピー" }, 
-      { id: "252", name: "シンデレラ宣言! コピー" }, { id: "253", name: "モノクローン コピー" }, { id: "254", name: "夜光性アミューズ コピー" }, 
-      { id: "255", name: "TENRIN コピー" }, { id: "256", name: "iLiFE! コピー" }, { id: "257", name: "のんふぃく! コピー" }, 
-      { id: "258", name: "ヒロインズ コピー" }, { id: "259", name: "シュレーディンガーの犬 コピー" }, { id: "260", name: "ラテラルアーク コピー" }, 
-      { id: "261", name: "GILTY×GILTY コピー" }, { id: "262", name: "ナナヲアカリ コピー" }, { id: "263", name: "れるりり コピー" }, 
-      { id: "264", name: "DECO*27 コピー" }, { id: "265", name: "ピノキオピー コピー" }, { id: "266", name: "Neru コピー" }, 
-      { id: "268", name: "すりぃ コピー" }, { id: "269", name: "Ayase コピー" }, { id: "270", name: "syudou コピー" }, 
-      { id: "271", name: "ツミキ コピー" }, { id: "272", name: "Kanaria コピー" }, { id: "273", name: "Chinozo コピー" }, 
-      { id: "274", name: "柊キライ コピー" }, { id: "275", name: "Wotamin コピー" }, { id: "276", name: "みきとP コピー" }, 
-      { id: "277", name: "Giga コピー" }, { id: "278", name: "TeddyLoid コピー" }, { id: "279", name: "かいりきベア コピー" }, 
-      { id: "280", name: "じん コピー" }, { id: "281", name: "kemu コピー" }, { id: "282", name: "ハチ コピー" }, 
-      { id: "283", name: "wowaka コピー" }, { id: "284", name: "トーマ コピー" }, { id: "286", name: "悪ノP コピー" }, 
+      { id: "98", name: "リーガルリリー コピー" }, { id: "99", name: "Kroi コピー" }, { id: "100", name: "wacci コピー" },
+      { id: "101", name: "サンボマスター コピー" }, { id: "102", name: "10-FEET コピー" }, { id: "103", name: "MAN WITH A MISSION コピー" },
+      { id: "104", name: "ELLEGARDEN コピー" }, { id: "105", name: "the pillows コピー" }, { id: "106", name: "GLAY コピー" },
+      { id: "107", name: "L'Arc~en~Ciel コピー" }, { id: "108", name: "X JAPAN コピー" }, { id: "109", name: "LUNA SEA コピー" },
+      { id: "110", name: "BOØWY コピー" }, { id: "111", name: "JUDY AND MARY コピー" }, { id: "112", name: "LINDBERG コピー" },
+      { id: "113", name: "REGINA コピー" }, { id: "114", name: "THE BLUE HEARTS コピー" }, { id: "115", name: "THE HIGH-LOWS コピー" },
+      { id: "116", name: "ザ・クロマニヨンズ コピー" }, { id: "117", name: "ウルフルズ コピー" }, { id: "118", name: "ユニコーン コピー" },
+      { id: "119", name: "PRINCESS PRINCESS コピー" }, { id: "120", name: "SHOW-YA コピー" }, { id: "121", name: "TRICERATOPS コピー" },
+      { id: "122", name: "GRAPEVINE コピー" }, { id: "124", name: "SUPERCAR コピー" }, { id: "125", name: "BLANKEY JET CITY コピー" },
+      { id: "126", name: "THE MICHELLE GUN ELEPHANT コピー" }, { id: "127", name: "the HIATUS コピー" }, { id: "128", name: "MONOEYES コピー" },
+      { id: "129", name: "coldrain コピー" }, { id: "130", name: "Crossfaith コピー" }, { id: "131", name: "Crystal Lake コピー" },
+      { id: "132", name: "ROTTENGRAFFTY コピー" }, { id: "133", name: "HEY-SMITH コピー" }, { id: "134", name: "Ken Yokoyama コピー" },
+      { id: "135", name: "Hi-STANDARD コピー" }, { id: "136", name: "HAWAIIAN6 コピー" }, { id: "137", name: "LOCOFRANK コピー" },
+      { id: "138", name: "OVER ARM THROW コピー" }, { id: "139", name: "COUNTRY YARD コピー" }, { id: "140", name: "SHANK コピー" },
+      { id: "141", name: "G-FREAK FACTORY コピー" }, { id: "142", name: "SHIMA コピー" }, { id: "143", name: "Northern19 コピー" },
+      { id: "144", name: "TOTALFAT コピー" }, { id: "145", name: "BIGMAMA コピー" }, { id: "146", name: "GOOD4NOTHING コピー" },
+      { id: "147", name: "EGG BRAIN コピー" }, { id: "148", name: "THE SNEAKERS コピー" }, { id: "149", name: "dustbox コピー" },
+      { id: "151", name: "SABOTEN コピー" }, { id: "152", name: "PAN コピー" }, { id: "153", name: "there is a light that never goes out コピー" },
+      { id: "154", name: "ENTH コピー" }, { id: "155", name: "SPARK SOUND SHOW コピー" }, { id: "156", name: "Track's コピー" },
+      { id: "157", name: "Maki コピー" }, { id: "158", name: "SideChest コピー" }, { id: "159", name: "Atomic Skipper コピー" },
+      { id: "160", name: "KOTORI コピー" }, { id: "161", name: "Age Factory コピー" }, { id: "162", name: "GEZAN コピー" },
+      { id: "163", name: "NOT WONK コピー" }, { id: "164", name: "DYGL コピー" }, { id: "165", name: "The Birthday コピー" },
+      { id: "166", name: "ROSSO コピー" }, { id: "168", name: "MO'SOME TONEBENDER コピー" }, { id: "169", name: "ART-SCHOOL コピー" },
+      { id: "170", name: "BURGER NUDS コピー" }, { id: "171", name: "Good Dog Happy Men コピー" }, { id: "172", name: "People In The Box コピー" },
+      { id: "173", name: "plenty コピー" }, { id: "174", name: "Galileo Galilei コピー" }, { id: "175", name: "BBHF コピー" },
+      { id: "176", name: "warbear コピー" }, { id: "177", name: "sleepy.ab コピー" }, { id: "179", name: "avengers in sci-fi コピー" },
+      { id: "180", name: "the telephones コピー" }, { id: "181", name: "POLYSICS コピー" }, { id: "182", name: "DE DE MOUSE コピー" },
+      { id: "183", name: "the band apart コピー" }, { id: "184", name: "toe コピー" }, { id: "185", name: "LITE コピー" },
+      { id: "186", name: "SPECIAL OTHERS コピー" }, { id: "187", name: "toconoma コピー" }, { id: "188", name: "jizue コピー" },
+      { id: "189", name: "mouse on the keys コピー" }, { id: "190", name: "fox capture plan コピー" }, { id: "191", name: "mudy on the 昨晩 コピー" },
+      { id: "192", name: "cinema staff コピー" }, { id: "193", name: "アルカラ コピー" }, { id: "194", name: "Gacharic Spin コピー" },
+      { id: "195", name: "NEMOPHILA コピー" }, { id: "196", name: "BAND-MAID コピー" }, { id: "197", name: "LOVEBITES コピー" },
+      { id: "198", name: "Aldious コピー" }, { id: "199", name: "SCANDAL コピー" }, { id: "200", name: "赤い公園 コピー" },
+      { id: "202", name: "Nothing's Carved In Stone コピー" }, { id: "203", name: "ZAZEN BOYS コピー" }, { id: "204", name: "KIMONOS コピー" },
+      { id: "205", name: "電気グルーヴ コピー" }, { id: "206", name: "capsule コピー" }, { id: "207", name: "Perfume コピー" },
+      { id: "208", name: "BABYMETAL コピー" }, { id: "209", name: "PassCode コピー" }, { id: "210", name: "BiSH コピー" },
+      { id: "212", name: "EMPiRE コピー" }, { id: "213", name: "豆柴の大群 コピー" }, { id: "214", name: "GANG PARADE コピー" },
+      { id: "215", name: "ASP コピー" }, { id: "216", name: "ExWHYZ コピー" }, { id: "218", name: "チームしゃちほこ コピー" },
+      { id: "219", name: "私立恵比寿中学 コピー" }, { id: "220", name: "ももいろクローバーZ コピー" }, { id: "221", name: "でんぱ組.inc コピー" },
+      { id: "222", name: "虹のコンキスタドール コピー" }, { id: "223", name: "わーすた コピー" }, { id: "224", name: "フィロソフィーのダンス コピー" },
+      { id: "225", name: "CYNHN コピー" }, { id: "226", name: "sora tob sakana コピー" }, { id: "227", name: "Maison book girl コピー" },
+      { id: "228", name: "ヤルヴィスト コピー" }, { id: "229", name: "BiS1st コピー" }, { id: "230", name: "ゆるめるモ! コピー" },
+      { id: "231", name: "おやすみホログラム コピー" }, { id: "232", name: "・・・・・・・・・ コピー" }, { id: "233", name: "NECRONOMIDOL コピー" },
+      { id: "234", name: "じゅじゅ コピー" }, { id: "235", name: "コショージメグミ コピー" }, { id: "236", name: "ベルハーモニー コピー" },
+      { id: "237", name: "ヤなことそっとミュート コピー" }, { id: "238", name: "amiinA コピー" }, { id: "239", name: "クマリデパート コピー" },
+      { id: "240", name: "クロスノエシス コピー" }, { id: "241", name: "キングサリ コピー" }, { id: "242", name: "タイトル未定 コピー" },
+      { id: "243", name: "fishbowl コピー" }, { id: "244", name: "開歌-かいか- コピー" }, { id: "245", name: "I's コピー" },
+      { id: "246", name: "悪魔のキッス コピー" }, { id: "247", name: "戦慄かなの コピー" }, { id: "248", name: "かてぃ コピー" },
+      { id: "249", name: "ZOC コピー" }, { id: "250", name: "METAMUSE コピー" }, { id: "251", name: "MAPA コピー" },
+      { id: "252", name: "シンデレラ宣言! コピー" }, { id: "253", name: "モノクローン コピー" }, { id: "254", name: "夜光性アミューズ コピー" },
+      { id: "255", name: "TENRIN コピー" }, { id: "256", name: "iLiFE! コピー" }, { id: "257", name: "のんふぃく! コピー" },
+      { id: "258", name: "ヒロインズ コピー" }, { id: "259", name: "シュレーディンガーの犬 コピー" }, { id: "260", name: "ラテラルアーク コピー" },
+      { id: "261", name: "GILTY×GILTY コピー" }, { id: "262", name: "ナナヲアカリ コピー" }, { id: "263", name: "れるりり コピー" },
+      { id: "264", name: "DECO*27 コピー" }, { id: "265", name: "ピノキオピー コピー" }, { id: "266", name: "Neru コピー" },
+      { id: "268", name: "すりぃ コピー" }, { id: "269", name: "Ayase コピー" }, { id: "270", name: "syudou コピー" },
+      { id: "271", name: "ツミキ コピー" }, { id: "272", name: "Kanaria コピー" }, { id: "273", name: "Chinozo コピー" },
+      { id: "274", name: "柊キライ コピー" }, { id: "275", name: "Wotamin コピー" }, { id: "276", name: "みきとP コピー" },
+      { id: "277", name: "Giga コピー" }, { id: "278", name: "TeddyLoid コピー" }, { id: "279", name: "かいりきベア コピー" },
+      { id: "280", name: "じん コピー" }, { id: "281", name: "kemu コピー" }, { id: "282", name: "ハチ コピー" },
+      { id: "283", name: "wowaka コピー" }, { id: "284", name: "トーマ コピー" }, { id: "286", name: "悪ノP コピー" },
       { id: "287", name: "164 コピー" }, { id: "288", name: "40mP コピー" }
     ];
 
-    // 動的に合流させる最終的なバンド用配列
-    let BANDS = [...STATIC_BANDS];
+    // 動的に合成するバンド配列
+    let ALL_BANDS_MAP = [...STATIC_BANDS_LIST];
+    let customBandsList = [];
 
     let myId = localStorage.getItem('k_on_my_id') || 'user_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('k_on_my_id', myId);
@@ -176,19 +178,9 @@
 
     let allUsers = []; 
     let searchQuery = "";
-    let currentTab = 'home';
+    let currentTab = 'custom'; // デフォルトは自由募集
     let currentSelectedBandId = null;
 
-    function getPartIcon(part) {
-      if (part.includes('ボーカル') || part.includes('Vo')) return '🎙️';
-      if (part.includes('ギター') || part.includes('Gt')) return '🎸';
-      if (part.includes('ベース') || part.includes('Ba')) return '🎸'; 
-      if (part.includes('ドラム') || part.includes('Dr')) return '🥁';
-      if (part.includes('キーボード') || part.includes('Kb') || part.includes('Pf')) return '🎹';
-      return '🎵';
-    }
-
-    // クラウドからカスタム募集（bandsテーブル）とユーザーデータを取得して合流させる
     async function loadData() {
       try {
         // 1. ユーザーリストを取得
@@ -201,27 +193,29 @@
           }
         }
 
-        // 2. 自由募集（bandsテーブル）を取得して固定リストにマージする
-        const { data: customBands, error: bandError } = await supabaseClient.from('bands').select('*');
+        // 2. 自由募集（bandsテーブル）を取得
+        const { data: customData, error: bandError } = await supabaseClient.from('bands').select('*');
         
-        // 常に最新の固定リストをベースに再構成（重複を阻止）
-        let mergedBands = [...STATIC_BANDS];
-        
-        if (!bandError && customBands) {
-          customBands.forEach(cb => {
-            // すでに固定リストにあるID、または名前が完全一致するものはスキップ
-            const exists = mergedBands.some(b => b.id === cb.id || b.name === cb.name);
-            if (!exists) {
-              mergedBands.push({ id: cb.id, name: cb.name });
+        let merged = [...STATIC_BANDS_LIST];
+        customBandsList = [];
+
+        if (!bandError && customData) {
+          customData.forEach(cb => {
+            // 重複排除
+            const existsInStatic = STATIC_BANDS_LIST.some(b => b.id === cb.id || b.name === cb.name);
+            if (!existsInStatic) {
+              const newCustomBand = { id: cb.id, name: cb.name };
+              customBandsList.push(newCustomBand);
+              merged.push(newCustomBand);
             }
           });
         }
-        BANDS = mergedBands;
+        ALL_BANDS_MAP = merged;
 
-        // 3. 画面のパーツ更新
-        if (currentTab === 'home') {
+        // 3. 画面のデータを安全に更新
+        if (currentTab === 'custom' || currentTab === 'static') {
           updateBandListOnly();
-        } else if (currentTab === 'search') {
+        } else if (currentTab === 'members' || currentTab === 'mypage') {
           render();
         }
         if (currentSelectedBandId) updateModalOnly(currentSelectedBandId);
@@ -241,9 +235,11 @@
 
     function render() {
       const main = document.getElementById('main-content');
+      const headerTag = document.getElementById('sub-title-tag');
       if (!main) return;
       
-      ['home', 'search', 'mypage'].forEach(tab => {
+      // タブメニューのアクティブ表示変更
+      ['custom', 'static', 'members', 'mypage'].forEach(tab => {
         const el = document.getElementById(`tab-${tab}`);
         if(!el) return;
         el.className = tab === currentTab 
@@ -251,56 +247,80 @@
           : "flex flex-col items-center gap-1 text-gray-400 flex-1 py-2";
       });
 
-      if (currentTab === 'home') {
+      // ヘッダーのサブタイトル変更
+      if (headerTag) {
+        if (currentTab === 'custom') headerTag.innerText = '自由募集';
+        if (currentTab === 'static') headerTag.innerText = '緩募リスト';
+        if (currentTab === 'members') headerTag.innerText = '部員名簿';
+        if (currentTab === 'mypage') headerTag.innerText = 'マイページ';
+      }
+
+      // 1. 自由募集タブ
+      if (currentTab === 'custom') {
         if (document.getElementById('search-input')) {
           updateBandListOnly();
           return;
         }
-
         main.innerHTML = `
           <div class="space-y-3">
             <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10 flex gap-2">
-              <input type="text" id="search-input" placeholder="バンド名で検索..." class="flex-1 text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
+              <input type="text" id="search-input" placeholder="自由募集から検索..." class="flex-1 text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
               <button onclick="addCustomBandPrompt()" class="bg-orange-500 text-white px-3 py-2.5 rounded-xl text-xs font-bold shadow-sm whitespace-nowrap active:bg-orange-600">
-                + 自由募集
+                + 新しく募集
               </button>
             </div>
             <div id="band-list-container" class="grid gap-2"></div>
           </div>
         `;
-        const input = document.getElementById('search-input');
-        if(input) {
-          input.value = searchQuery;
-          input.addEventListener('input', (e) => {
-            searchQuery = e.target.value;
-            updateBandListOnly();
-          });
-        }
+        setupSearchInput();
         updateBandListOnly();
       }
 
-      else if (currentTab === 'search') {
-        const myBands = (me.bandIds || []).map(bId => BANDS.find(b => b.id === bId)?.name).filter(Boolean);
+      // 2. 緩募リストタブ
+      else if (currentTab === 'static') {
+        if (document.getElementById('search-input')) {
+          updateBandListOnly();
+          return;
+        }
         main.innerHTML = `
-          <div class="space-y-4">
-            <h3 class="font-bold text-gray-700 text-sm">あなたの現在の選択状況</h3>
-            <div class="bg-white p-4 rounded-xl border shadow-sm space-y-3">
-              <div class="flex justify-between items-center border-b pb-2">
-                <span class="font-bold text-gray-800 text-base">${me.name}</span>
-                <div class="flex gap-1">${me.parts.map(p => `<span class="text-[10px] bg-orange-100 text-orange-600 px-2 py-0.5 rounded font-bold">${getPartIcon(p)} ${p}</span>`).join('')}</div>
-              </div>
-              <div>
-                <p class="text-xs text-gray-600 bg-gray-50 p-2 rounded border border-dashed">${me.bio || '未入力'}</p>
-              </div>
-              <div>
-                <span class="text-[11px] font-bold text-gray-400 block mb-1">やりたいバンド (${myBands.length})</span>
-                <div class="flex flex-wrap gap-1">${myBands.map(b => `<span class="text-xs bg-orange-500 text-white px-2.5 py-1 rounded-full">🎵 ${b}</span>`).join('')}</div>
-              </div>
+          <div class="space-y-3">
+            <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10">
+              <input type="text" id="search-input" placeholder="緩募リストから検索..." class="w-full text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
             </div>
+            <div id="band-list-container" class="grid gap-2"></div>
           </div>
         `;
+        setupSearchInput();
+        updateBandListOnly();
       }
 
+      // 3. 部員名簿タブ
+      else if (currentTab === 'members') {
+        let html = `<div class="space-y-3">`;
+        allUsers.forEach(u => {
+          const uBands = (u.bandIds || []).map(bId => ALL_BANDS_MAP.find(b => b.id === bId)?.name).filter(Boolean);
+          html += `
+            <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2">
+              <div class="flex justify-between items-center border-b pb-1.5">
+                <span class="font-bold text-gray-800 text-base">${u.name}</span>
+                <div class="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                  ${(u.parts || []).map(p => `<span class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium">${p}</span>`).join('')}
+                </div>
+              </div>
+              <p class="text-xs text-gray-600">${u.bio || '未入力'}</p>
+              ${uBands.length > 0 ? `
+                <div class="pt-1">
+                  <span class="text-[9px] font-bold text-gray-400 block mb-1">選択中のバンド</span>
+                  <div class="flex flex-wrap gap-1">${uBands.map(b => `<span class="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-medium">${b}</span>`).join('')}</div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+        main.innerHTML = html + `</div>`;
+      }
+
+      // 4. マイページタブ
       else if (currentTab === 'mypage') {
         if(document.getElementById('edit-name')) return;
 
@@ -319,7 +339,7 @@
         allParts.forEach(p => {
           html += `
             <label class="flex items-center gap-2 text-xs bg-gray-50 p-2.5 rounded border cursor-pointer">
-              <input type="checkbox" name="edit-parts" value="${p}" class="w-4 h-4 accent-orange-500" /> ${getPartIcon(p)} ${p}
+              <input type="checkbox" name="edit-parts" value="${p}" class="w-4 h-4 accent-orange-500" /> ${p}
             </label>
           `;
         });
@@ -345,39 +365,26 @@
       }
     }
 
-    // 自由募集（新しいバンド）をSupabaseに登録する処理
-    window.addCustomBandPrompt = async function() {
-      const name = prompt("募集したいバンド名（または曲名など）を入力してください：");
-      if (!name || !name.trim()) return;
-
-      const cleanedName = name.trim();
-
-      // 固定、動的リスト含めて重複チェック
-      const isDuplicate = BANDS.some(b => b.name.toLowerCase() === cleanedName.toLowerCase());
-      if (isDuplicate) {
-        alert("そのバンドはすでにリストに存在します！");
-        return;
-      }
-
-      const newId = 'custom_' + Math.random().toString(36).substr(2, 9);
-      const newBand = { id: newId, name: cleanedName };
-
-      try {
-        // Supabaseのbandsテーブルに書き込み
-        await supabaseClient.from('bands').insert(newBand);
-        alert(`「${cleanedName}」を自由募集リストに追加しました！`);
-        await loadData();
-      } catch (e) {
-        console.error(e);
-        alert("追加に失敗しました。");
+    function setupSearchInput() {
+      const input = document.getElementById('search-input');
+      if(input) {
+        input.value = searchQuery;
+        input.addEventListener('input', (e) => {
+          searchQuery = e.target.value;
+          updateBandListOnly();
+        });
       }
     }
 
+    // 検索欄を維持しながら、表示する対象リストを切り替えて描画
     function updateBandListOnly() {
       const container = document.getElementById('band-list-container');
       if (!container) return;
 
-      const sortedBands = BANDS.map(b => {
+      // 現在のタブに応じてベースにするリストを選択
+      const targetBands = (currentTab === 'custom') ? customBandsList : STATIC_BANDS_LIST;
+
+      const sortedBands = targetBands.map(b => {
         const matchingUsers = allUsers.filter(u => u.bandIds && u.bandIds.includes(b.id));
         return { ...b, count: matchingUsers.length, isMyJoined: me.bandIds && me.bandIds.includes(b.id) };
       }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
@@ -386,17 +393,14 @@
 
       let html = "";
       filteredBands.forEach(b => {
-        const isCustom = b.id.startsWith('custom_');
         html += `
-          <div data-band-id="${b.id}" class="band-card bg-white border ${isCustom ? 'border-orange-200 bg-orange-50/10' : 'border-gray-100'} rounded-xl p-3 flex justify-between items-center shadow-sm cursor-pointer hover:border-orange-300">
+          <div data-band-id="${b.id}" class="band-card bg-white border border-gray-100 rounded-xl p-3 flex justify-between items-center shadow-sm cursor-pointer hover:border-orange-200">
             <div class="flex-1 pr-2 overflow-hidden">
-              <h4 class="font-bold text-gray-800 text-sm truncate">
-                ${isCustom ? '<span class="text-xs bg-orange-100 text-orange-600 px-1 py-0.2 rounded font-bold mr-1">自由募集</span>' : ''}${b.name}
-              </h4>
+              <h4 class="font-bold text-gray-800 text-sm truncate">${b.name}</h4>
               ${b.isMyJoined ? `<span class="text-[9px] bg-orange-500 text-white px-1.5 py-0.2 rounded-full font-medium">選択中</span>` : ''}
             </div>
             <div class="bg-orange-50 px-2.5 py-1 rounded-lg text-center min-w-[55px]">
-              <span class="text-orange-600 font-black text-xs block">🔥 ${b.count}人</span>
+              <span class="text-orange-600 font-black text-xs block">${b.count}人</span>
             </div>
           </div>
         `;
@@ -410,7 +414,35 @@
 
     window.switchTab = function(tab) {
       currentTab = tab;
+      searchQuery = ""; // タブ切り替え時に検索文字をリセット
       render();
+    }
+
+    // 新規自由募集を登録
+    window.addCustomBandPrompt = async function() {
+      const name = prompt("募集したいバンド名（または曲名など）を入力してください：");
+      if (!name || !name.trim()) return;
+
+      const cleanedName = name.trim();
+
+      // 重複チェック
+      const isDuplicate = ALL_BANDS_MAP.some(b => b.name.toLowerCase() === cleanedName.toLowerCase());
+      if (isDuplicate) {
+        alert("そのバンドはすでに存在します！");
+        return;
+      }
+
+      const newId = 'custom_' + Math.random().toString(36).substr(2, 9);
+      const newBand = { id: newId, name: cleanedName };
+
+      try {
+        await supabaseClient.from('bands').insert(newBand);
+        alert(`「${cleanedName}」を追加しました！`);
+        await loadData();
+      } catch (e) {
+        console.error(e);
+        alert("追加に失敗しました。");
+      }
     }
 
     async function saveProfile() {
@@ -428,7 +460,7 @@
 
       await saveMyDataToCloud();
       alert('保存しました！');
-      switchTab('home');
+      switchTab('custom');
     }
 
     function openModal(bandId) {
@@ -438,13 +470,13 @@
     }
 
     function updateModalOnly(bandId) {
-      const band = BANDS.find(b => b.id === bandId);
+      const band = ALL_BANDS_MAP.find(b => b.id === bandId);
       if(!band) return;
       const members = allUsers.filter(u => u.bandIds && u.bandIds.includes(bandId));
       const isMyJoined = me.bandIds && me.bandIds.includes(bandId);
 
       document.getElementById('modal-band-name').innerText = band.name;
-      document.getElementById('modal-band-count').innerText = `🔥 ${members.length}人`;
+      document.getElementById('modal-band-count').innerText = `${members.length}人`;
       
       const btn = document.getElementById('modal-join-btn');
       if(isMyJoined) {
@@ -462,7 +494,7 @@
           <div class="flex justify-between font-bold">
             <span>${m.name}</span>
             <span class="text-orange-600 text-[10px]">
-              ${m.parts.map(p => `${getPartIcon(p)}${p}`).join(', ')}
+              ${(m.parts || []).join(', ')}
             </span>
           </div>
           <p class="text-gray-600 mt-0.5">${m.bio || ''}</p>
@@ -481,7 +513,7 @@
       if (index > -1) me.bandIds.splice(index, 1);
       else me.bandIds.push(bandId);
       
-      if (currentTab === 'home') updateBandListOnly();
+      if (currentTab === 'custom' || currentTab === 'static') updateBandListOnly();
       if (currentSelectedBandId) updateModalOnly(bandId);
       await saveMyDataToCloud();
     }
