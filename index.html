@@ -97,7 +97,7 @@
     const BASE_BAND_NAMES = [
       "YOASOBI", "RADWIMPS", "ずっと真夜中でいいのに。", "King Gnu", "Official髭男dism", "ヨルシカ", "back number", "スピッツ", "BUMP OF CHICKEN", "米津玄師",
       "サカナクション", "ポルカドットスティングレイ", "緑黄色社会", "My Hair is Bad", "04 Limited Sazabys", "[Alexandros]", "UVERworld", "SiM", "BLUE ENCOUNT", "SUPER BEAVER",
-      "sumika", "Saucy Dog", "マカロニえんぴつ", "クリープhype", "ゲスの極み乙女。", "indigo la End", "KEYTALK", "KANA-BOON", "THE ORAL CIGARETTES", "UNISON SQUARE GARDEN",
+      "sumika", "Saucy Dog", "マカロニえんぴつ", "クリープハイプ", "ゲスの極み乙女。", "indigo la End", "KEYTALK", "KANA-BOON", "THE ORAL CIGARETTES", "UNISON SQUARE GARDEN",
       "フレデリック", "ヤバイTシャツ屋さん", "SHISHAMO", "Mrs. GREEN APPLE", "Novelbright", "Vaundy", "Eve", "Aimer", "LiSA", "ASIAN KUNG-FU GENERATION",
       "エレファントカシマシ", "THE BACK HORN", "ストレイテナー", "9mm Parabellum Bullet", "凛として時雨", "androp", "Base Ball Bear", "チャットモンチー", "ねごと", "キュウソネコカミ",
       "打首獄門同好会", "東京事変", "椎名林檎", "フジファブリック", "くるり", "NUMBER GIRL", "銀杏BOYZ", "神聖かまってちゃん", "amazarashi", "羊文学",
@@ -146,10 +146,10 @@
     let userSearchQuery = "";
     let currentTab = 'home';
     let currentSelectedBandId = null;
-    let isSaving = false;
+    let isSaving = false; // クラウド保存中の自動読み込みブロック用フラグ
 
     async function loadData() {
-      if (isSaving) return;
+      if (isSaving) return; // 保存中・更新中は読み込みを完全にスキップして競合を防ぐ
       try {
         const { data: userData, error: userError } = await supabaseClient.from('users').select('*');
         if (!userError && userData) {
@@ -193,7 +193,7 @@
     loadData();
 
     async function saveMyDataToCloud() {
-      isSaving = true;
+      isSaving = true; // ロック開始
       localStorage.setItem('k_on_me_v9', JSON.stringify(me));
       
       const myIndex = allUsers.findIndex(u => u.id === myId);
@@ -214,8 +214,11 @@
 
       try {
         await supabaseClient.from('users').upsert(tempMyCloudData);
-      } catch(e) { console.error(e); } finally {
-        setTimeout(() => { isSaving = false; }, 500);
+      } catch(e) { 
+        console.error(e); 
+      } finally {
+        // 非同期の書き込みが完全に完了したあとにロックを解除
+        isSaving = false;
       }
     }
 
@@ -227,6 +230,7 @@
       if (!bandName) return alert('バンド名を入力してください');
       if (me.name === "未設定の部員") return alert('マイページからプロフィールを設定してください！');
 
+      isSaving = true; // ロック開始
       const newBandId = 'band_' + Math.random().toString(36).substr(2, 9);
       const newBandData = {
         id: newBandId,
@@ -245,17 +249,28 @@
 
         bandNameInput.value = "";
         refreshUI();
+        
         await supabaseClient.from('bands').insert(newBandData);
-        await saveMyDataToCloud();
-      } catch (e) { console.error(e); }
+        // 自身のユーザーデータ（bandIds）も確実に更新完了を待つ
+        localStorage.setItem('k_on_me_v9', JSON.stringify(me));
+        const tempMyCloudData = {
+          id: me.id, name: me.name, parts: me.parts,
+          bio: me.bio ? `${me.bio} 【${me.grade}】` : `【${me.grade}】`,
+          lineId: me.lineId || "", bandIds: me.bandIds
+        };
+        await supabaseClient.from('users').upsert(tempMyCloudData);
+      } catch (e) { 
+        console.error(e); 
+      } finally {
+        isSaving = false; // すべて完了してから読み込みロック解除
+      }
     }
 
-    // 【修正】ステータス切替時に意図しない同期ズレを起こさないようロック制御を徹底
     async function toggleBandStatus(bandId) {
       const band = recruitedBands.find(b => b.id === bandId);
       if (!band) return;
 
-      isSaving = true; 
+      isSaving = true; // ロック開始
       const nextStatus = band.status === 'closed' ? 'open' : 'closed';
       band.status = nextStatus;
 
@@ -263,18 +278,20 @@
 
       try {
         await supabaseClient.from('bands').update({ status: nextStatus }).eq('id', bandId);
-      } catch(e) { console.error(e); } finally {
-        setTimeout(() => { isSaving = false; }, 800); 
+      } catch(e) { 
+        console.error(e); 
+      } finally {
+        isSaving = false; // 解除
       }
     }
 
     async function deleteBand(bandId) {
       if (!confirm('このバンドを解散（削除）しますか？チャット履歴も消去されます。')) return;
       
+      isSaving = true; // ロック開始
       try {
         closeModal();
         recruitedBands = recruitedBands.filter(b => b.id !== bandId);
-        
         if (me.bandIds) {
           me.bandIds = me.bandIds.filter(id => id !== bandId);
         }
@@ -283,8 +300,19 @@
 
         await supabaseClient.from('bands').delete().eq('id', bandId);
         await supabaseClient.from('messages').delete().eq('band_id', bandId);
-        await saveMyDataToCloud();
-      } catch (e) { console.error(e); }
+        
+        localStorage.setItem('k_on_me_v9', JSON.stringify(me));
+        const tempMyCloudData = {
+          id: me.id, name: me.name, parts: me.parts,
+          bio: me.bio ? `${me.bio} 【${me.grade}】` : `【${me.grade}】`,
+          lineId: me.lineId || "", bandIds: me.bandIds
+        };
+        await supabaseClient.from('users').upsert(tempMyCloudData);
+      } catch (e) { 
+        console.error(e); 
+      } finally {
+        isSaving = false;
+      }
     }
 
     async function sendBandChatMessage() {
@@ -826,16 +854,17 @@
       currentSelectedBandId = null;
     }
 
-    // 【修正】バリデーションの typo ("未設定 of 部員") を "未設定の部員" に完全修正
     async function toggleJoin(bandId) {
       if (me.name === "未設定の部員") return alert('バンドにエントリーするには、先にマイページからプロフィールを設定してください！');
+      
+      isSaving = true; // ロック開始
       if (!me.bandIds) me.bandIds = [];
       const index = me.bandIds.indexOf(bandId);
       if (index > -1) me.bandIds.splice(index, 1);
       else me.bandIds.push(bandId);
       
       refreshUI();
-      await saveMyDataToCloud();
+      await saveMyDataToCloud(); // 完了時に内部でisSaving = falseになる
     }
     
     render();
