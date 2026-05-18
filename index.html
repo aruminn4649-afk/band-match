@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>バンドマッチ</title>
+  <title>バンドマッチ PRO</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -12,48 +12,76 @@
   <div class="w-full max-w-md mx-auto h-screen bg-gray-50 flex flex-col relative overflow-hidden shadow-2xl">
     
     <header class="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10 flex justify-between items-center">
-      <h1 class="text-xl font-bold text-gray-800">
-        バンドマッチ
+      <h1 class="text-xl font-bold text-gray-800 flex items-center gap-1">
+        <span class="text-orange-500">🎸</span> バンドマッチ
       </h1>
-      <div id="sub-title-tag" class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">自由募集</div>
+      <div class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full font-semibold">Ver 1.01</div>
     </header>
 
     <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-24">
     </main>
 
     <div id="band-modal" class="absolute inset-0 bg-black/50 z-20 hidden flex items-end justify-center">
-      <div class="bg-white w-full rounded-t-2xl p-5 max-h-[80vh] overflow-y-auto space-y-4 shadow-2xl">
-        <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto -mt-2 mb-2"></div>
-        <div class="flex justify-between items-start">
+      <div class="bg-white w-full rounded-t-2xl p-5 max-h-[85vh] flex flex-col space-y-3 shadow-2xl">
+        <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto -mt-2 mb-1 shrink-0"></div>
+        
+        <div class="flex justify-between items-start shrink-0">
           <div>
-            <span class="text-[10px] font-bold text-orange-500 tracking-wider">BAND DETAILS</span>
-            <h3 id="modal-band-name" class="font-extrabold text-gray-800 text-xl mt-0.5">---</h3>
+            <span id="modal-band-type" class="text-[10px] font-bold text-orange-500 tracking-wider">BAND DETAILS</span>
+            <h3 id="modal-band-name" class="font-extrabold text-gray-800 text-lg mt-0.5 truncate max-w-[260px]">---</h3>
+            <p id="modal-band-creator" class="text-[10px] text-gray-400 mt-0.5">募集主: ---</p>
           </div>
-          <div id="modal-band-count" class="bg-orange-500 text-white px-3 py-1 rounded-full font-black text-sm">0人</div>
+          <div class="flex flex-col items-end gap-1 shrink-0">
+            <div id="modal-band-count" class="bg-orange-500 text-white px-2.5 py-1 rounded-full font-black text-xs">🔥 0人</div>
+          </div>
+        </div>
+
+        <div id="modal-admin-actions" class="flex gap-2 shrink-0 hidden">
+          <button id="modal-toggle-status-btn" class="flex-1 py-1.5 rounded text-[10px] font-bold border transition-all"></button>
+          <button id="modal-delete-btn" class="bg-red-50 text-red-600 border border-red-200 px-2.5 py-1.5 rounded text-[10px] font-bold active:bg-red-100">🚨 解散</button>
         </div>
         
-        <button id="modal-join-btn" class="w-full py-3 rounded-xl font-bold text-sm shadow-md transition-all"></button>
+        <button id="modal-join-btn" class="w-full py-2.5 rounded-xl font-bold text-xs shadow-md transition-all shrink-0"></button>
 
-        <div class="border-t border-gray-100 pt-3">
-          <h4 class="font-bold text-xs text-gray-500 mb-2">エントリー中のメンバー</h4>
-          <div id="modal-member-list" class="space-y-2 max-h-[35vh] overflow-y-auto pr-1"></div>
+        <div class="bg-gray-50 border rounded-xl p-2 shrink-0">
+          <span class="text-[10px] font-bold text-gray-400 block mb-1">現在のパート編成</span>
+          <div id="modal-part-summary" class="flex gap-2 flex-wrap text-[10px]"></div>
         </div>
-        <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-semibold">閉じる</button>
+
+        <div class="border-t border-gray-100 pt-2 shrink-0">
+          <h4 class="font-bold text-[11px] text-gray-500 mb-1 flex items-center gap-1">
+            <i class="fa-solid fa-users text-orange-500"></i> エントリー中のメンバー
+          </h4>
+          <div id="modal-member-list" class="flex flex-wrap gap-1 max-h-[80px] overflow-y-auto"></div>
+        </div>
+
+        <div class="border-t border-gray-100 pt-2 flex-1 flex flex-col min-h-0">
+          <h4 class="font-bold text-[11px] text-gray-500 mb-1 flex items-center gap-1 shrink-0">
+            <i class="fa-solid fa-comments text-orange-500"></i> バンド内作戦会議チャット
+          </h4>
+          <div id="modal-chat-timeline" class="flex-1 overflow-y-auto space-y-2 py-1 bg-gray-50/50 rounded-lg p-2 border border-gray-100"></div>
+          <div class="flex gap-1.5 mt-1.5 shrink-0">
+            <input type="text" id="modal-chat-input" autocomplete="off" placeholder="このバンド内で発言..." class="flex-1 text-xs p-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500" onkeypress="if(event.key==='Enter') sendBandChatMessage()"/>
+            <button onclick="sendBandChatMessage()" class="bg-orange-500 text-white text-xs px-3 py-2 rounded-lg font-bold shadow-sm active:bg-orange-600"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </div>
+
+        <button onclick="closeModal()" class="w-full bg-gray-100 text-gray-600 py-2 rounded-lg text-xs font-semibold shrink-0">閉じる</button>
       </div>
     </div>
 
     <nav class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 h-16 flex justify-around items-center z-10">
-      <button onclick="switchTab('custom')" id="tab-custom" class="flex flex-col items-center gap-1 text-orange-500 font-bold flex-1 py-2">
-        <i class="fa-solid fa-pen-to-square text-lg"></i><span class="text-[10px]">自由募集</span>
+      <button onclick="switchTab('home')" id="tab-home" class="flex flex-col items-center gap-1 text-orange-500 font-bold flex-1 py-2">
+        <i class="fa-solid fa-fire text-base"></i><span class="text-[9px]">自由募集</span>
       </button>
-      <button onclick="switchTab('static')" id="tab-static" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
-        <i class="fa-solid fa-list text-lg"></i><span class="text-[10px]">緩募リスト</span>
+      <button onclick="switchTab('archive')" id="tab-archive" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
+        <i class="fa-solid fa-folder-open text-base"></i><span class="text-[9px]">緩募リスト</span>
       </button>
-      <button onclick="switchTab('members')" id="tab-members" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
-        <i class="fa-solid fa-users text-lg"></i><span class="text-[10px]">部員名簿</span>
+      <button onclick="switchTab('search')" id="tab-search" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
+        <i class="fa-solid fa-address-book text-base"></i><span class="text-[9px]">部員名簿</span>
       </button>
       <button onclick="switchTab('mypage')" id="tab-mypage" class="flex flex-col items-center gap-1 text-gray-400 flex-1 py-2">
-        <i class="fa-solid fa-user text-lg"></i><span class="text-[10px]">マイページ</span>
+        <i class="fa-solid fa-user text-base"></i><span class="text-[9px]">マイページ</span>
       </button>
     </nav>
 
@@ -66,9 +94,8 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZzb250bHVwd3J2bW10aHNvdmF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg5NDQ3NTcsImV4cCI6MjA5NDUyMDc1N30.DTGclEZKMoFNAwZPPdNOMjEtDVVpw4s-D_jwRaL8MZc";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 固定バンドリスト（重複のない完全版 285組）
-    const STATIC_BANDS_LIST = [
-      { id: "1", name: "YOASOBI コピー" }, { id: "2", name: "RADWIMPS コピー" }, { id: "3", name: "ずっと真夜中でいいのに。 コピー" },
+    const FIXED_BANDS = [
+{ id: "1", name: "YOASOBI コピー" }, { id: "2", name: "RADWIMPS コピー" }, { id: "3", name: "ずっと真夜中でいいのに。 コピー" },
       { id: "4", name: "King Gnu コピー" }, { id: "5", name: "Official髭男dism コピー" }, { id: "6", name: "ヨルシカ コピー" },
       { id: "7", name: "back number コピー" }, { id: "8", name: "スピッツ コピー" }, { id: "9", name: "BUMP OF CHICKEN コピー" },
       { id: "10", name: "米津玄師 コピー" }, { id: "11", name: "サカナクション コピー" }, { id: "12", name: "ポルカドットスティングレイ コピー" },
@@ -100,16 +127,17 @@
       { id: "86", name: "KUZIRA コピー" }, { id: "87", name: "鉄風東京 コピー" }, { id: "88", name: "ルサンチマン コピー" },
       { id: "89", name: "文藝天国 コピー" }, { id: "90", name: "yonige コピー" }, { id: "91", name: "Chilli Beans. コピー" },
       { id: "92", name: "ブランデー戦記 コピー" }, { id: "93", name: "chilldspot コピー" }, { id: "94", name: "TOMOO コピー" },
-      { id: "95", name: "Cody・Lee(理) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
-      { id: "98", name: "リーガルリリー コピー" }, { id: "99", name: "Kroi コピー" }, { id: "100", name: "wacci コピー" },
-      { id: "101", name: "サンボマスター コピー" }, { id: "102", name: "10-FEET コピー" }, { id: "103", name: "MAN WITH A MISSION コピー" },
-      { id: "104", name: "ELLEGARDEN コピー" }, { id: "105", name: "the pillows コピー" }, { id: "106", name: "GLAY コピー" },
-      { id: "107", name: "L'Arc~en~Ciel コピー" }, { id: "108", name: "X JAPAN コピー" }, { id: "109", name: "LUNA SEA コピー" },
-      { id: "110", name: "BOØWY コピー" }, { id: "111", name: "JUDY AND MARY コピー" }, { id: "112", name: "LINDBERG コピー" },
-      { id: "113", name: "REGINA コピー" }, { id: "114", name: "THE BLUE HEARTS コピー" }, { id: "115", name: "THE HIGH-LOWS コピー" },
-      { id: "116", name: "ザ・クロマニヨンズ コピー" }, { id: "117", name: "ウルフルズ コピー" }, { id: "118", name: "ユニコーン コピー" },
-      { id: "119", name: "PRINCESS PRINCESS コピー" }, { id: "120", name: "SHOW-YA コピー" }, { id: "121", name: "TRICERATOPS コピー" },
-      { id: "122", name: "GRAPEVINE コピー" }, { id: "124", name: "SUPERCAR コピー" }, { id: "125", name: "BLANKEY JET CITY コピー" },
+      { id: "95", name: "Cody・Lee(李) コピー" }, { id: "96", name: "muque コピー" }, { id: "97", name: "にしな コピー" },
+      { id: "98", name: "リーガルリリー コピー" }, 
+      { id: "99", name: "Kroi コピー" }, { id: "100", name: "wacci コピー" }, { id: "101", name: "サンボマスター コピー" },
+      { id: "102", name: "10-FEET コピー" }, { id: "103", name: "MAN WITH A MISSION コピー" }, { id: "104", name: "ELLEGARDEN コピー" },
+      { id: "105", name: "the pillows コピー" }, { id: "106", name: "GLAY コピー" }, { id: "107", name: "L'Arc~en~Ciel コピー" },
+      { id: "108", name: "X JAPAN コピー" }, { id: "109", name: "LUNA SEA コピー" }, { id: "110", name: "BOØWY コピー" },
+      { id: "111", name: "JUDY AND MARY コピー" }, { id: "112", name: "LINDBERG コピー" }, { id: "113", name: "REGINA コピー" },
+      { id: "114", name: "THE BLUE HEARTS コピー" }, { id: "115", name: "THE HIGH-LOWS コピー" }, { id: "116", name: "ザ・クロマニヨンズ コピー" },
+      { id: "117", name: "ウルフルズ コピー" }, { id: "118", name: "ユニコーン コピー" }, { id: "119", name: "PRINCESS PRINCESS コピー" },
+      { id: "120", name: "SHOW-YA コピー" }, { id: "121", name: "TRICERATOPS コピー" }, { id: "122", name: "GRAPEVINE コピー" },
+      { id: "123", name: "くるり コピー" }, { id: "124", name: "SUPERCAR コピー" }, { id: "125", name: "BLANKEY JET CITY コピー" },
       { id: "126", name: "THE MICHELLE GUN ELEPHANT コピー" }, { id: "127", name: "the HIATUS コピー" }, { id: "128", name: "MONOEYES コピー" },
       { id: "129", name: "coldrain コピー" }, { id: "130", name: "Crossfaith コピー" }, { id: "131", name: "Crystal Lake コピー" },
       { id: "132", name: "ROTTENGRAFFTY コピー" }, { id: "133", name: "HEY-SMITH コピー" }, { id: "134", name: "Ken Yokoyama コピー" },
@@ -118,15 +146,16 @@
       { id: "141", name: "G-FREAK FACTORY コピー" }, { id: "142", name: "SHIMA コピー" }, { id: "143", name: "Northern19 コピー" },
       { id: "144", name: "TOTALFAT コピー" }, { id: "145", name: "BIGMAMA コピー" }, { id: "146", name: "GOOD4NOTHING コピー" },
       { id: "147", name: "EGG BRAIN コピー" }, { id: "148", name: "THE SNEAKERS コピー" }, { id: "149", name: "dustbox コピー" },
-      { id: "151", name: "SABOTEN コピー" }, { id: "152", name: "PAN コピー" }, { id: "153", name: "there is a light that never goes out コピー" },
-      { id: "154", name: "ENTH コピー" }, { id: "155", name: "SPARK SOUND SHOW コピー" }, { id: "156", name: "Track's コピー" },
-      { id: "157", name: "Maki コピー" }, { id: "158", name: "SideChest コピー" }, { id: "159", name: "Atomic Skipper コピー" },
-      { id: "160", name: "KOTORI コピー" }, { id: "161", name: "Age Factory コピー" }, { id: "162", name: "GEZAN コピー" },
-      { id: "163", name: "NOT WONK コピー" }, { id: "164", name: "DYGL コピー" }, { id: "165", name: "The Birthday コピー" },
-      { id: "166", name: "ROSSO コピー" }, { id: "168", name: "MO'SOME TONEBENDER コピー" }, { id: "169", name: "ART-SCHOOL コピー" },
-      { id: "170", name: "BURGER NUDS コピー" }, { id: "171", name: "Good Dog Happy Men コピー" }, { id: "172", name: "People In The Box コピー" },
-      { id: "173", name: "plenty コピー" }, { id: "174", name: "Galileo Galilei コピー" }, { id: "175", name: "BBHF コピー" },
-      { id: "176", name: "warbear コピー" }, { id: "177", name: "sleepy.ab コピー" }, { id: "179", name: "avengers in sci-fi コピー" },
+      { id: "150", name: "locofrank コピー" }, { id: "151", name: "SABOTEN コピー" }, { id: "152", name: "PAN コピー" },
+      { id: "153", name: " there is a light that never goes out コピー" }, { id: "154", name: "ENTH コピー" }, { id: "155", name: "SPARK SOUND SHOW コピー" },
+      { id: "156", name: "Track's コピー" }, { id: "157", name: "Maki コピー" }, { id: "158", name: "SideChest コピー" },
+      { id: "159", name: "Atomic Skipper コピー" }, { id: "160", name: "KOTORI コピー" }, { id: "161", name: "Age Factory コピー" },
+      { id: "162", name: "GEZAN コピー" }, { id: "163", name: "NOT WONK コピー" }, { id: "164", name: "DYGL コピー" },
+      { id: "165", name: "The Birthday コピー" }, { id: "166", name: "ROSSO コピー" }, { id: "167", name: "the pillows コピー" },
+      { id: "168", name: "MO'SOME TONEBENDER コピー" }, { id: "169", name: "ART-SCHOOL コピー" }, { id: "170", name: "BURGER NUDS コピー" },
+      { id: "171", name: "Good Dog Happy Men コピー" }, { id: "172", name: "People In The Box コピー" }, { id: "173", name: "plenty コピー" },
+      { id: "174", name: "Galileo Galilei コピー" }, { id: "175", name: "BBHF コピー" }, { id: "176", name: "warbear コピー" },
+      { id: "177", name: "sleepy.ab コピー" }, { id: "178", name: "サカナクション コピー" }, { id: "179", name: "avengers in sci-fi コピー" },
       { id: "180", name: "the telephones コピー" }, { id: "181", name: "POLYSICS コピー" }, { id: "182", name: "DE DE MOUSE コピー" },
       { id: "183", name: "the band apart コピー" }, { id: "184", name: "toe コピー" }, { id: "185", name: "LITE コピー" },
       { id: "186", name: "SPECIAL OTHERS コピー" }, { id: "187", name: "toconoma コピー" }, { id: "188", name: "jizue コピー" },
@@ -134,11 +163,12 @@
       { id: "192", name: "cinema staff コピー" }, { id: "193", name: "アルカラ コピー" }, { id: "194", name: "Gacharic Spin コピー" },
       { id: "195", name: "NEMOPHILA コピー" }, { id: "196", name: "BAND-MAID コピー" }, { id: "197", name: "LOVEBITES コピー" },
       { id: "198", name: "Aldious コピー" }, { id: "199", name: "SCANDAL コピー" }, { id: "200", name: "赤い公園 コピー" },
-      { id: "202", name: "Nothing's Carved In Stone コピー" }, { id: "203", name: "ZAZEN BOYS コピー" }, { id: "204", name: "KIMONOS コピー" },
-      { id: "205", name: "電気グルーヴ コピー" }, { id: "206", name: "capsule コピー" }, { id: "207", name: "Perfume コピー" },
-      { id: "208", name: "BABYMETAL コピー" }, { id: "209", name: "PassCode コピー" }, { id: "210", name: "BiSH コピー" },
-      { id: "212", name: "EMPiRE コピー" }, { id: "213", name: "豆柴の大群 コピー" }, { id: "214", name: "GANG PARADE コピー" },
-      { id: "215", name: "ASP コピー" }, { id: "216", name: "ExWHYZ コピー" }, { id: "218", name: "チームしゃちほこ コピー" },
+      { id: "201", name: "ストレイテナー コピー" }, { id: "202", name: "Nothing's Carved In Stone コピー" }, { id: "203", name: "ZAZEN BOYS コピー" },
+      { id: "204", name: "KIMONOS コピー" }, { id: "205", name: "電気グルーヴ コピー" }, { id: "206", name: "capsule コピー" },
+      { id: "207", name: "Perfume コピー" }, { id: "208", name: "BABYMETAL コピー" }, { id: "209", name: "PassCode コピー" },
+      { id: "210", name: "BiSH コピー" }, { id: "211", name: "BiS コピー" }, { id: "212", name: "EMPiRE コピー" },
+      { id: "213", name: "豆柴の大群 コピー" }, { id: "214", name: "GANG PARADE コピー" }, { id: "215", name: "ASP コピー" },
+      { id: "216", name: "ExWHYZ コピー" }, { id: "217", name: "神聖かまってちゃん コピー" }, { id: "218", name: "チームしゃちほこ コピー" },
       { id: "219", name: "私立恵比寿中学 コピー" }, { id: "220", name: "ももいろクローバーZ コピー" }, { id: "221", name: "でんぱ組.inc コピー" },
       { id: "222", name: "虹のコンキスタドール コピー" }, { id: "223", name: "わーすた コピー" }, { id: "224", name: "フィロソフィーのダンス コピー" },
       { id: "225", name: "CYNHN コピー" }, { id: "226", name: "sora tob sakana コピー" }, { id: "227", name: "Maison book girl コピー" },
@@ -155,91 +185,255 @@
       { id: "258", name: "ヒロインズ コピー" }, { id: "259", name: "シュレーディンガーの犬 コピー" }, { id: "260", name: "ラテラルアーク コピー" },
       { id: "261", name: "GILTY×GILTY コピー" }, { id: "262", name: "ナナヲアカリ コピー" }, { id: "263", name: "れるりり コピー" },
       { id: "264", name: "DECO*27 コピー" }, { id: "265", name: "ピノキオピー コピー" }, { id: "266", name: "Neru コピー" },
-      { id: "268", name: "すりぃ コピー" }, { id: "269", name: "Ayase コピー" }, { id: "270", name: "syudou コピー" },
-      { id: "271", name: "ツミキ コピー" }, { id: "272", name: "Kanaria コピー" }, { id: "273", name: "Chinozo コピー" },
-      { id: "274", name: "柊キライ コピー" }, { id: "275", name: "Wotamin コピー" }, { id: "276", name: "みきとP コピー" },
-      { id: "277", name: "Giga コピー" }, { id: "278", name: "TeddyLoid コピー" }, { id: "279", name: "かいりきベア コピー" },
-      { id: "280", name: "じん コピー" }, { id: "281", name: "kemu コピー" }, { id: "282", name: "ハチ コピー" },
-      { id: "283", name: "wowaka コピー" }, { id: "284", name: "トーマ コピー" }, { id: "286", name: "悪ノP コピー" },
-      { id: "287", name: "164 コピー" }, { id: "288", name: "40mP コピー" }
+      { id: "267", name: "40mP コピー" }, { id: "268", name: "すりぃ コピー" }, { id: "269", name: "Ayase コピー" },
+      { id: "270", name: "syudou コピー" }, { id: "271", name: "ツミキ コピー" }, { id: "272", name: "Kanaria コピー" },
+      { id: "273", name: "Chinozo コピー" }, { id: "274", name: "柊キライ コピー" }, { id: "275", name: "Wotamin コピー" },
+      { id: "276", name: "みきとP コピー" }, { id: "277", name: "Giga コピー" }, { id: "278", name: "TeddyLoid コピー" },
+      { id: "279", name: "かいりきベア コピー" }, { id: "280", name: "じん コピー" }, { id: "281", name: "kemu コピー" },
+      { id: "282", name: "ハチ コピー" }, { id: "283", name: "wowaka コピー" }, { id: "284", name: "トーマ コピー" },
+      { id: "285", name: "れるりり コピー" }, { id: "286", name: "悪ノP コピー" }, { id: "287", name: "164 コピー" },
+      { id: "288", name: "40mP コピー" }
     ];
 
-    // 動的に合成するバンド配列
-    let ALL_BANDS_MAP = [...STATIC_BANDS_LIST];
-    let customBandsList = [];
+    let recruitedBands = [];
+    let allChatMessages = []; 
+    let allUsers = []; 
 
     let myId = localStorage.getItem('k_on_my_id') || 'user_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('k_on_my_id', myId);
 
-    let me = { id: myId, name: "未設定の部員", parts: ["ギター"], bio: "設定を変更して使ってください！", bandIds: [] };
-    if(localStorage.getItem('k_on_me_v5')) {
-      me = JSON.parse(localStorage.getItem('k_on_me_v5'));
+    let me = { id: myId, name: "未設定の部員", grade: "新入生", parts: ["ギター"], bio: "設定を変更して使ってください！", line_id: "", band_ids: [] };
+    if(localStorage.getItem('k_on_me_final')) {
+      try { me = JSON.parse(localStorage.getItem('k_on_me_final')); } catch(e){}
+    }
+    if (!Array.isArray(me.band_ids)) me.band_ids = [];
+
+    let searchQuery = "";
+    let archiveSearchQuery = "";
+    let userSearchQuery = "";
+    let currentTab = 'home';
+    let currentSelectedBandId = null;
+    let isSaving = false;
+
+    function ensureArray(val) {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'string') {
+        return val.split(',').map(s => s.trim()).filter(Boolean);
+      }
+      return [];
     }
 
-    let allUsers = []; 
-    let searchQuery = "";
-    let currentTab = 'custom'; // デフォルトは自由募集
-    let currentSelectedBandId = null;
-
-    async function loadData() {
+    async function loadData(force = false) {
+      if (isSaving && !force) return;
       try {
-        // 1. ユーザーリストを取得
         const { data: userData, error: userError } = await supabaseClient.from('users').select('*');
         if (!userError && userData) {
-          allUsers = userData;
+          allUsers = userData.map(u => ({
+            ...u,
+            band_ids: ensureArray(u.band_ids)
+          }));
+
           const myCloudData = allUsers.find(u => u.id === myId);
           if (myCloudData) {
-            me.bandIds = myCloudData.bandIds || [];
+            if (!me.name || me.name === "未設定の部員" || force) {
+              me.name = myCloudData.name || me.name;
+              me.line_id = myCloudData.line_id || me.line_id;
+              me.grade = myCloudData.grade || me.grade;
+              me.parts = myCloudData.parts || me.parts;
+              me.bio = myCloudData.bio || me.bio;
+              me.band_ids = myCloudData.band_ids;
+              localStorage.setItem('k_on_me_final', JSON.stringify(me));
+            }
           }
         }
 
-        // 2. 自由募集（bandsテーブル）を取得
-        const { data: customData, error: bandError } = await supabaseClient.from('bands').select('*');
-        
-        let merged = [...STATIC_BANDS_LIST];
-        customBandsList = [];
-
-        if (!bandError && customData) {
-          customData.forEach(cb => {
-            // 重複排除
-            const existsInStatic = STATIC_BANDS_LIST.some(b => b.id === cb.id || b.name === cb.name);
-            if (!existsInStatic) {
-              const newCustomBand = { id: cb.id, name: cb.name };
-              customBandsList.push(newCustomBand);
-              merged.push(newCustomBand);
-            }
-          });
+        const { data: bandData, error: bandError } = await supabaseClient.from('bands').select('*');
+        if (!bandError && bandData) {
+          recruitedBands = bandData;
         }
-        ALL_BANDS_MAP = merged;
 
-        // 3. 画面のデータを安全に更新
-        if (currentTab === 'custom' || currentTab === 'static') {
-          updateBandListOnly();
-        } else if (currentTab === 'members' || currentTab === 'mypage') {
-          render();
+        const { data: msgData, error: msgError } = await supabaseClient.from('messages').select('*').order('created_at', { ascending: true });
+        if (!msgError && msgData) {
+          allChatMessages = msgData;
         }
-        if (currentSelectedBandId) updateModalOnly(currentSelectedBandId);
 
+        refreshUI();
       } catch (e) { console.error(e); }
     }
 
-    setInterval(loadData, 2000);
-    loadData();
+    function refreshUI() {
+      if (currentTab === 'home') updateBandListOnly();
+      if (currentTab === 'archive') updateArchiveListOnly();
+      if (currentTab === 'search') updateUserListOnly();
+      if (currentSelectedBandId) updateModalOnly(currentSelectedBandId);
+    }
+
+    setInterval(() => { loadData(false); }, 2000);
+    loadData(true);
 
     async function saveMyDataToCloud() {
-      localStorage.setItem('k_on_me_v5', JSON.stringify(me));
+      isSaving = true;
+      if (!Array.isArray(me.band_ids)) me.band_ids = [];
+      localStorage.setItem('k_on_me_final', JSON.stringify(me));
+      
+      const tempMyCloudData = {
+        id: me.id,
+        name: me.name || "未設定の部員",
+        grade: me.grade,
+        parts: me.parts || ["ギター"],
+        bio: me.bio || "",
+        line_id: me.line_id || "", 
+        band_ids: me.band_ids.join(',')
+      };
+
       try {
-        await supabaseClient.from('users').upsert(me);
-      } catch(e) { console.error(e); }
+        await supabaseClient.from('users').upsert(tempMyCloudData);
+      } catch(e) { 
+        console.error(e); 
+      } finally {
+        isSaving = false; 
+        await loadData(true);
+      }
+    }
+
+    async function createNewBand() {
+      const bandNameInput = document.getElementById('new-band-name');
+      if (!bandNameInput) return;
+      const bandName = bandNameInput.value.trim();
+
+      if (!bandName) return alert('バンド名を入力してください');
+      if (!me.name || me.name === "未設定の部員") return alert('マイページからプロフィールを設定してください！');
+
+      isSaving = true; 
+      const newBandId = 'band_' + Math.random().toString(36).substr(2, 9);
+      
+      const newBandData = {
+        id: newBandId,
+        name: bandName,
+        creator_id: me.id,
+        creator_name: me.name,
+        status: 'open'
+      };
+
+      try {
+        if (!me.band_ids.includes(newBandId)) {
+          me.band_ids.push(newBandId);
+        }
+        bandNameInput.value = "";
+        refreshUI();
+        
+        await supabaseClient.from('bands').insert(newBandData);
+        await saveMyDataToCloud();
+      } catch (e) { 
+        console.error(e); 
+      } finally {
+        isSaving = false; 
+        await loadData(true);
+      }
+    }
+
+    async function toggleBandStatus(bandId) {
+      const band = recruitedBands.find(b => b.id === bandId);
+      if (!band) return;
+
+      isSaving = true; 
+      const nextStatus = band.status === 'closed' ? 'open' : 'closed';
+      band.status = nextStatus;
+      refreshUI();
+
+      try {
+        await supabaseClient.from('bands').update({ status: nextStatus }).eq('id', bandId);
+      } catch(e) { 
+        console.error(e); 
+      } finally {
+        isSaving = false; 
+        await loadData(true);
+      }
+    }
+
+    async function deleteBand(bandId) {
+      if (!confirm('このバンドを解散（削除）しますか？')) return;
+      
+      isSaving = true; 
+      try {
+        closeModal();
+        me.band_ids = me.band_ids.filter(id => id !== bandId);
+        refreshUI();
+
+        await supabaseClient.from('bands').delete().eq('id', bandId);
+        await supabaseClient.from('messages').delete().eq('band_id', bandId);
+        await saveMyDataToCloud();
+      } catch (e) { 
+        console.error(e); 
+      } finally {
+        isSaving = false;
+        await loadData(true);
+      }
+    }
+
+    async function sendBandChatMessage() {
+      if (!currentSelectedBandId) return;
+      const chatInput = document.getElementById('modal-chat-input');
+      if (!chatInput) return;
+      const text = chatInput.value.trim();
+
+      if (!text) return;
+      if (me.name === "未設定の部員") return alert('発言するにはプロフィールを設定してください！');
+
+      const newMsg = {
+        id: 'msg_' + Math.random().toString(36).substr(2, 9),
+        band_id: currentSelectedBandId,
+        user_id: me.id,
+        user_name: me.name,
+        user_grade: me.grade || "新入生",
+        text: text,
+        created_at: new Date().toISOString()
+      };
+
+      try {
+        allChatMessages.push(newMsg);
+        chatInput.value = "";
+        updateModalChatTimeline(currentSelectedBandId);
+        await supabaseClient.from('messages').insert(newMsg);
+      } catch (e) { console.error(e); }
+    }
+
+    function getGradeColor(grade) {
+      if(grade === "2年生") return "bg-blue-50 text-blue-600 border-blue-100";
+      if(grade === "3年生") return "bg-purple-50 text-purple-600 border-purple-100";
+      if(grade === "4年生以上") return "bg-gray-100 text-gray-600 border-gray-200";
+      return "bg-green-50 text-green-600 border-green-100";
+    }
+
+    function makeMemberBadgesHtml(bandId) {
+      const members = allUsers.filter(u => u.band_ids && u.band_ids.includes(bandId));
+      if (members.length === 0) {
+        return `<div class="text-[10px] text-gray-400 italic mt-1.5 pl-1">エントリー未登録</div>`;
+      }
+
+      let html = `<div class="flex flex-wrap gap-1 mt-2 border-t border-gray-50 pt-1.5">`;
+      members.forEach(m => {
+        const partsStr = (m.parts || []).join('/');
+        const gradeColor = getGradeColor(m.grade);
+
+        html += `
+          <span class="inline-flex items-center gap-0.5 text-[9px] bg-gray-50 text-gray-700 px-1.5 py-0.5 rounded border border-gray-200/60 font-medium">
+            <span class="font-bold text-gray-900">${m.name || '不明'}</span>
+            <span class="text-[8px] px-1 rounded-sm border ${gradeColor} font-black scale-90 origin-left">${m.grade || '新入生'}</span>
+            <span class="text-orange-600 text-[8px] font-bold">🎸${partsStr}</span>
+          </span>
+        `;
+      });
+      html += `</div>`;
+      return html;
     }
 
     function render() {
       const main = document.getElementById('main-content');
-      const headerTag = document.getElementById('sub-title-tag');
       if (!main) return;
       
-      // タブメニューのアクティブ表示変更
-      ['custom', 'static', 'members', 'mypage'].forEach(tab => {
+      ['home', 'archive', 'search', 'mypage'].forEach(tab => {
         const el = document.getElementById(`tab-${tab}`);
         if(!el) return;
         el.className = tab === currentTab 
@@ -247,91 +441,101 @@
           : "flex flex-col items-center gap-1 text-gray-400 flex-1 py-2";
       });
 
-      // ヘッダーのサブタイトル変更
-      if (headerTag) {
-        if (currentTab === 'custom') headerTag.innerText = '自由募集';
-        if (currentTab === 'static') headerTag.innerText = '緩募リスト';
-        if (currentTab === 'members') headerTag.innerText = '部員名簿';
-        if (currentTab === 'mypage') headerTag.innerText = 'マイページ';
-      }
-
-      // 1. 自由募集タブ
-      if (currentTab === 'custom') {
-        if (document.getElementById('search-input')) {
-          updateBandListOnly();
-          return;
-        }
+      if (currentTab === 'home') {
         main.innerHTML = `
-          <div class="space-y-3">
-            <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10 flex gap-2">
-              <input type="text" id="search-input" placeholder="自由募集から検索..." class="flex-1 text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
-              <button onclick="addCustomBandPrompt()" class="bg-orange-500 text-white px-3 py-2.5 rounded-xl text-xs font-bold shadow-sm whitespace-nowrap active:bg-orange-600">
-                + 新しく募集
-              </button>
-            </div>
-            <div id="band-list-container" class="grid gap-2"></div>
-          </div>
-        `;
-        setupSearchInput();
-        updateBandListOnly();
-      }
-
-      // 2. 緩募リストタブ
-      else if (currentTab === 'static') {
-        if (document.getElementById('search-input')) {
-          updateBandListOnly();
-          return;
-        }
-        main.innerHTML = `
-          <div class="space-y-3">
-            <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10">
-              <input type="text" id="search-input" placeholder="緩募リストから検索..." class="w-full text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
-            </div>
-            <div id="band-list-container" class="grid gap-2"></div>
-          </div>
-        `;
-        setupSearchInput();
-        updateBandListOnly();
-      }
-
-      // 3. 部員名簿タブ
-      else if (currentTab === 'members') {
-        let html = `<div class="space-y-3">`;
-        allUsers.forEach(u => {
-          const uBands = (u.bandIds || []).map(bId => ALL_BANDS_MAP.find(b => b.id === bId)?.name).filter(Boolean);
-          html += `
-            <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2">
-              <div class="flex justify-between items-center border-b pb-1.5">
-                <span class="font-bold text-gray-800 text-base">${u.name}</span>
-                <div class="flex flex-wrap gap-1 justify-end max-w-[60%]">
-                  ${(u.parts || []).map(p => `<span class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium">${p}</span>`).join('')}
-                </div>
+          <div class="space-y-4">
+            <form onsubmit="event.preventDefault(); createNewBand();" class="bg-white p-3 rounded-xl border shadow-sm space-y-2" autocomplete="off">
+              <span class="text-[10px] font-bold text-orange-500 tracking-wider block">🎵 自由コピーバンド追加募集</span>
+              <div class="flex gap-2">
+                <input type="text" id="new-band-name" autocomplete="off" placeholder="例: マカロニえんぴつ コピー" class="flex-1 text-sm p-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"/>
+                <button type="submit" class="bg-orange-500 text-white text-xs px-3 py-2 rounded-lg font-bold shadow-sm active:bg-orange-600 shrink-0">募集</button>
               </div>
-              <p class="text-xs text-gray-600">${u.bio || '未入力'}</p>
-              ${uBands.length > 0 ? `
-                <div class="pt-1">
-                  <span class="text-[9px] font-bold text-gray-400 block mb-1">選択中のバンド</span>
-                  <div class="flex flex-wrap gap-1">${uBands.map(b => `<span class="text-[10px] bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full font-medium">${b}</span>`).join('')}</div>
-                </div>
-              ` : ''}
+            </form>
+            <div class="sticky top-0 bg-gray-50 pt-1 pb-1 z-10">
+              <input type="text" id="search-input" autocomplete="off" placeholder="募集中のバンドを検索..." class="w-full text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
             </div>
-          `;
-        });
-        main.innerHTML = html + `</div>`;
+            <div id="band-list-container" class="grid gap-2"></div>
+          </div>
+        `;
+        const input = document.getElementById('search-input');
+        if(input) {
+          input.value = searchQuery;
+          input.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            updateBandListOnly();
+          });
+        }
+        updateBandListOnly();
       }
 
-      // 4. マイページタブ
-      else if (currentTab === 'mypage') {
-        if(document.getElementById('edit-name')) return;
+      else if (currentTab === 'archive') {
+        main.innerHTML = `
+          <div class="space-y-4">
+            <div class="sticky top-0 bg-gray-50 pt-1 pb-1 z-10 space-y-2">
+              <div class="bg-gray-100 p-2 rounded-xl border">
+                <span class="text-xs font-bold text-gray-600 pl-1">📋 固定緩募バンドリスト(${FIXED_BANDS.length}組)</span>
+              </div>
+              <input type="text" id="archive-search-input" autocomplete="off" placeholder="緩募バンドを検索..." class="w-full text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
+            </div>
+            <div id="archive-list-container" class="grid gap-2"></div>
+          </div>
+        `;
+        const input = document.getElementById('archive-search-input');
+        if(input) {
+          input.value = archiveSearchQuery;
+          input.addEventListener('input', (e) => {
+            archiveSearchQuery = e.target.value;
+            updateArchiveListOnly();
+          });
+        }
+        updateArchiveListOnly();
+      }
 
+      else if (currentTab === 'search') {
+        main.innerHTML = `
+          <div class="space-y-3">
+            <div class="sticky top-0 bg-gray-50 pt-1 pb-2 z-10 space-y-2">
+              <input type="text" id="user-search-input" autocomplete="off" placeholder="名前・学年・パートで部員を検索..." class="w-full text-sm p-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:border-orange-500"/>
+            </div>
+            <div id="user-list-container" class="space-y-3"></div>
+          </div>
+        `;
+        const userInput = document.getElementById('user-search-input');
+        if(userInput) {
+          userInput.value = userSearchQuery;
+          userInput.addEventListener('input', (e) => {
+            userSearchQuery = e.target.value;
+            updateUserListOnly();
+          });
+        }
+        updateUserListOnly();
+      }
+
+      else if (currentTab === 'mypage') {
         const allParts = ['ボーカル', 'ギター', 'ベース', 'ドラム', 'キーボード'];
+        const grades = ['新入生', '2年生', '3年生', '4年生以上'];
+        
         let html = `
           <div class="bg-white p-5 rounded-xl border shadow-sm space-y-4">
             <h3 class="font-bold text-gray-800 border-b pb-2 text-base">プロフィール設定</h3>
+            
             <div>
               <label class="block text-xs font-bold text-gray-500 mb-1">部員名</label>
-              <input type="text" id="edit-name" class="w-full text-sm p-2.5 border rounded-lg focus:outline-none focus:border-orange-500" />
+              <input type="text" id="edit-name" autocomplete="off" class="w-full text-sm p-2.5 border rounded-lg focus:outline-none focus:border-orange-500" />
             </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1">LINE ID（任意）</label>
+              <input type="text" id="edit-line-id" autocomplete="off" placeholder="例: tms_taro123" class="w-full text-sm p-2.5 border rounded-lg focus:outline-none focus:border-orange-500" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-500 mb-1">学年</label>
+              <select id="edit-grade" class="w-full text-sm p-2.5 bg-white border rounded-lg focus:outline-none focus:border-orange-500">
+                ${grades.map(g => `<option value="${g}">${g}</option>`).join('')}
+              </select>
+            </div>
+
             <div>
               <label class="block text-xs font-bold text-gray-500 mb-1">担当パート</label>
               <div class="grid grid-cols-2 gap-2">
@@ -355,98 +559,175 @@
         `;
         main.innerHTML = html;
 
-        document.getElementById('edit-name').value = me.name;
+        document.getElementById('edit-name').value = me.name || "";
+        document.getElementById('edit-line-id').value = me.line_id || ""; 
+        document.getElementById('edit-grade').value = me.grade || "新入生";
         document.getElementById('edit-bio').value = me.bio || '';
         document.querySelectorAll('input[name="edit-parts"]').forEach(cb => {
-          if(me.parts.includes(cb.value)) cb.checked = true;
+          if(me.parts && me.parts.includes(cb.value)) cb.checked = true;
         });
 
         document.getElementById('save-profile-btn').addEventListener('click', saveProfile);
       }
     }
 
-    function setupSearchInput() {
-      const input = document.getElementById('search-input');
-      if(input) {
-        input.value = searchQuery;
-        input.addEventListener('input', (e) => {
-          searchQuery = e.target.value;
-          updateBandListOnly();
-        });
-      }
-    }
-
-    // 検索欄を維持しながら、表示する対象リストを切り替えて描画
     function updateBandListOnly() {
       const container = document.getElementById('band-list-container');
       if (!container) return;
 
-      // 現在のタブに応じてベースにするリストを選択
-      const targetBands = (currentTab === 'custom') ? customBandsList : STATIC_BANDS_LIST;
+      const sortedBands = recruitedBands.map(b => {
+        const matchingUsers = allUsers.filter(u => u.band_ids && u.band_ids.includes(b.id));
+        return { ...b, count: matchingUsers.length, isMyJoined: me.band_ids.includes(b.id) };
+      }).sort((a, b) => {
+        const aClosed = a.status === 'closed' ? 1 : 0;
+        const bClosed = b.status === 'closed' ? 1 : 0;
+        return aClosed - bClosed || b.count - a.count || a.name.localeCompare(b.name);
+      });
 
-      const sortedBands = targetBands.map(b => {
-        const matchingUsers = allUsers.filter(u => u.bandIds && u.bandIds.includes(b.id));
-        return { ...b, count: matchingUsers.length, isMyJoined: me.bandIds && me.bandIds.includes(b.id) };
+      const filteredBands = sortedBands.filter(b => b.name && b.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      let html = "";
+      filteredBands.forEach(b => {
+        const isClosed = b.status === 'closed';
+        html += `
+          <div data-band-id="${b.id}" class="band-card bg-white border border-gray-200 rounded-xl p-3 flex flex-col shadow-sm cursor-pointer hover:border-orange-200 ${isClosed ? 'opacity-65 bg-gray-50/50' : ''}">
+            <div class="flex justify-between items-center">
+              <div class="flex-1 pr-2 overflow-hidden">
+                <h4 class="font-bold text-gray-800 text-sm truncate flex items-center gap-1.5">
+                  ${b.name}
+                  ${isClosed ? `<span class="text-[8px] bg-gray-400 text-white px-1.5 py-0.2 rounded font-black tracking-wider shrink-0">締切済</span>` : ''}
+                </h4>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-[9px] text-gray-400">👑 募集主: ${b.creator_name || '不明'}</span>
+                  ${b.isMyJoined ? `<span class="text-[9px] bg-orange-500 text-white px-1.5 py-0.2 rounded-full font-medium">エントリー中</span>` : ''}
+                </div>
+              </div>
+              <div class="${isClosed ? 'bg-gray-200' : 'bg-orange-50'} px-2.5 py-1 rounded-lg text-center min-w-[55px]">
+                <span class="${isClosed ? 'text-gray-500' : 'text-orange-600'} font-black text-xs block">🔥 ${b.count}人</span>
+              </div>
+            </div>
+            ${makeMemberBadgesHtml(b.id)}
+          </div>
+        `;
+      });
+      container.innerHTML = html || `<p class="text-center text-xs text-gray-400 py-8">募集中の自由バンドはありません</p>`;
+
+      container.querySelectorAll('.band-card').forEach(card => {
+        card.onclick = () => openModal(card.dataset.bandId);
+      });
+    }
+
+    function updateArchiveListOnly() {
+      const container = document.getElementById('archive-list-container');
+      if (!container) return;
+
+      const sortedBands = FIXED_BANDS.map(b => {
+        const matchingUsers = allUsers.filter(u => u.band_ids && u.band_ids.includes(b.id));
+        return { ...b, count: matchingUsers.length, isMyJoined: me.band_ids.includes(b.id) };
       }).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 
-      const filteredBands = sortedBands.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      const filteredBands = sortedBands.filter(b => b.name && b.name.toLowerCase().includes(archiveSearchQuery.toLowerCase()));
 
       let html = "";
       filteredBands.forEach(b => {
         html += `
-          <div data-band-id="${b.id}" class="band-card bg-white border border-gray-100 rounded-xl p-3 flex justify-between items-center shadow-sm cursor-pointer hover:border-orange-200">
-            <div class="flex-1 pr-2 overflow-hidden">
-              <h4 class="font-bold text-gray-800 text-sm truncate">${b.name}</h4>
-              ${b.isMyJoined ? `<span class="text-[9px] bg-orange-500 text-white px-1.5 py-0.2 rounded-full font-medium">選択中</span>` : ''}
+          <div data-band-id="${b.id}" class="band-card bg-white border border-gray-100 rounded-xl p-3 flex flex-col shadow-sm cursor-pointer hover:border-orange-200">
+            <div class="flex justify-between items-center">
+              <div class="flex-1 pr-2 overflow-hidden">
+                <h4 class="font-bold text-gray-800 text-sm truncate">${b.name}</h4>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span class="text-[9px] text-gray-400">📁 緩募アイテム</span>
+                  ${b.isMyJoined ? `<span class="text-[9px] bg-orange-500 text-white px-1.5 py-0.2 rounded-full font-medium">エントリー中</span>` : ''}
+                </div>
+              </div>
+              <div class="bg-orange-50 px-2.5 py-1 rounded-lg text-center min-w-[55px]">
+                <span class="text-orange-600 font-black text-xs block">🔥 ${b.count}人</span>
+              </div>
             </div>
-            <div class="bg-orange-50 px-2.5 py-1 rounded-lg text-center min-w-[55px]">
-              <span class="text-orange-600 font-black text-xs block">${b.count}人</span>
+            ${makeMemberBadgesHtml(b.id)}
+          </div>
+        `;
+      });
+      container.innerHTML = html;
+
+      container.querySelectorAll('.band-card').forEach(card => {
+        card.onclick = () => openModal(card.dataset.bandId);
+      });
+    }
+
+    function updateUserListOnly() {
+      const container = document.getElementById('user-list-container');
+      if (!container) return;
+
+      let displayUsers = [...allUsers];
+      if (!displayUsers.some(u => u.id === myId) && me.name !== "未設定の部員") {
+        displayUsers.push(me);
+      }
+
+      const filteredUsers = displayUsers.filter(u => {
+        const userName = (u.name || "").trim();
+        if (!userName || userName === "未設定の部員") return false;
+
+        const nameMatch = userName.toLowerCase().includes(userSearchQuery.toLowerCase());
+        const gradeMatch = (u.grade || "").toLowerCase().includes(userSearchQuery.toLowerCase());
+        const lineIdMatch = (u.line_id || "").toLowerCase().includes(userSearchQuery.toLowerCase());
+        const partsMatch = (u.parts || []).some(p => p.toLowerCase().includes(userSearchQuery.toLowerCase()));
+        
+        return nameMatch || gradeMatch || lineIdMatch || partsMatch;
+      });
+
+      if (filteredUsers.length === 0) {
+        container.innerHTML = `<p class="text-center text-xs text-gray-400 py-8">部員が見つかりません</p>`;
+        return;
+      }
+
+      let html = "";
+      filteredUsers.forEach(u => {
+        const userBands = (u.band_ids || []).map(bId => {
+          const b = recruitedBands.find(x => x.id === bId) || FIXED_BANDS.find(x => x.id === bId);
+          return b ? b.name : null;
+        }).filter(Boolean);
+
+        const isItMe = u.id === myId;
+        const gradeColor = getGradeColor(u.grade);
+
+        html += `
+          <div class="bg-white p-4 rounded-xl border shadow-sm space-y-2.5 ${isItMe ? 'border-orange-300 bg-orange-50/10' : ''}">
+            <div class="flex justify-between items-center border-b pb-1.5">
+              <div class="flex flex-col">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-bold text-gray-800 text-sm">${u.name}</span>
+                  <span class="text-[9px] border px-1.5 py-0.5 rounded-full font-black ${gradeColor}">${u.grade || '新入生'}</span>
+                  ${isItMe ? '<span class="text-[10px] text-orange-500 font-normal">(あなた)</span>' : ''}
+                </div>
+                ${u.line_id ? `<span class="text-[9px] text-green-600 font-medium mt-0.5"><i class="fa-brands fa-line mr-0.5"></i>ID: ${u.line_id}</span>` : ''}
+              </div>
+              <div class="flex gap-1">${(u.parts || []).map(p => `<span class="text-[9px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded font-bold">${p}</span>`).join('')}</div>
+            </div>
+            <p class="text-xs text-gray-600 bg-gray-50/80 p-2 rounded">${u.bio || 'コメントなし'}</p>
+            <div class="space-y-1">
+              <span class="text-[10px] font-bold text-gray-400 block">エントリー中のバンド (${userBands.length})</span>
+              <div class="flex flex-wrap gap-1">
+                ${userBands.length === 0 
+                  ? '<span class="text-[10px] text-gray-400 italic">まだエントリーしていません</span>' 
+                  : userBands.map(b => `<span class="text-[10px] bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">🎵 ${b}</span>`).join('')}
+              </div>
             </div>
           </div>
         `;
       });
-      container.innerHTML = html || `<p class="text-center text-xs text-gray-400 py-8">見つかりません</p>`;
-
-      container.querySelectorAll('.band-card').forEach(card => {
-        card.addEventListener('click', () => openModal(card.dataset.bandId));
-      });
+      container.innerHTML = html;
     }
 
     window.switchTab = function(tab) {
       currentTab = tab;
-      searchQuery = ""; // タブ切り替え時に検索文字をリセット
       render();
-    }
-
-    // 新規自由募集を登録
-    window.addCustomBandPrompt = async function() {
-      const name = prompt("募集したいバンド名（または曲名など）を入力してください：");
-      if (!name || !name.trim()) return;
-
-      const cleanedName = name.trim();
-
-      // 重複チェック
-      const isDuplicate = ALL_BANDS_MAP.some(b => b.name.toLowerCase() === cleanedName.toLowerCase());
-      if (isDuplicate) {
-        alert("そのバンドはすでに存在します！");
-        return;
-      }
-
-      const newId = 'custom_' + Math.random().toString(36).substr(2, 9);
-      const newBand = { id: newId, name: cleanedName };
-
-      try {
-        await supabaseClient.from('bands').insert(newBand);
-        alert(`「${cleanedName}」を追加しました！`);
-        await loadData();
-      } catch (e) {
-        console.error(e);
-        alert("追加に失敗しました。");
-      }
     }
 
     async function saveProfile() {
       const name = document.getElementById('edit-name').value;
+      const line_id = document.getElementById('edit-line-id').value;
+      const grade = document.getElementById('edit-grade').value;
       const bio = document.getElementById('edit-bio').value;
       const checkboxes = document.querySelectorAll('input[name="edit-parts"]:checked');
       const parts = Array.from(checkboxes).map(cb => cb.value);
@@ -455,51 +736,131 @@
       if(parts.length === 0) return alert('パートを選択してください');
 
       me.name = name;
+      me.line_id = line_id;
+      me.grade = grade;
       me.parts = parts;
       me.bio = bio;
 
       await saveMyDataToCloud();
       alert('保存しました！');
-      switchTab('custom');
+      switchTab('home');
     }
 
     function openModal(bandId) {
       currentSelectedBandId = bandId;
       updateModalOnly(bandId);
       document.getElementById('band-modal').classList.remove('hidden');
+      setTimeout(scrollChatToBottom, 80);
     }
 
     function updateModalOnly(bandId) {
-      const band = ALL_BANDS_MAP.find(b => b.id === bandId);
-      if(!band) return;
-      const members = allUsers.filter(u => u.bandIds && u.bandIds.includes(bandId));
-      const isMyJoined = me.bandIds && me.bandIds.includes(bandId);
+      const isCustom = bandId.startsWith('band_');
+      const band = isCustom 
+        ? recruitedBands.find(b => b.id === bandId) 
+        : FIXED_BANDS.find(b => b.id === bandId);
 
+      if(!band) return;
+
+      const members = allUsers.filter(u => u.band_ids && u.band_ids.includes(bandId));
+      const isMyJoined = me.band_ids.includes(bandId);
+      const isClosed = isCustom && band.status === 'closed';
+
+      document.getElementById('modal-band-type').innerText = isCustom ? '自由追加募集アイテム' : '固定緩募アイテム';
       document.getElementById('modal-band-name').innerText = band.name;
-      document.getElementById('modal-band-count').innerText = `${members.length}人`;
-      
-      const btn = document.getElementById('modal-join-btn');
-      if(isMyJoined) {
-        btn.innerText = 'エントリーを解除する';
-        btn.className = 'w-full bg-gray-200 text-gray-600 py-3 rounded-xl font-bold text-sm border';
+      document.getElementById('modal-band-creator').innerText = isCustom ? `募集主: ${band.creator_name || '不明'}` : '固定リスト';
+      document.getElementById('modal-band-count').innerText = isClosed ? '🔒 締切済' : `🔥 ${members.length}人`;
+
+      const adminActions = document.getElementById('modal-admin-actions');
+      if (isCustom && band.creator_id === me.id) {
+        adminActions.classList.remove('hidden');
+        const statusBtn = document.getElementById('modal-toggle-status-btn');
+        if (isClosed) {
+          statusBtn.innerText = '🔓 募集を再開する';
+          statusBtn.className = 'flex-1 py-1.5 rounded text-[10px] font-bold bg-green-50 text-green-600 border border-green-200 active:bg-green-100';
+        } else {
+          statusBtn.innerText = '🔒 募集を締め切る';
+          statusBtn.className = 'flex-1 py-1.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-300 active:bg-gray-200';
+        }
+        statusBtn.onclick = () => toggleBandStatus(bandId);
+        document.getElementById('modal-delete-btn').onclick = () => deleteBand(bandId);
       } else {
-        btn.innerText = 'このバンドをやりたい！';
-        btn.className = 'w-full bg-orange-500 text-white py-3 rounded-xl font-bold text-sm';
+        adminActions.classList.add('hidden');
       }
-      btn.onclick = () => toggleJoin(bandId);
+
+      const joinBtn = document.getElementById('modal-join-btn');
+      if (isMyJoined) {
+        joinBtn.innerText = 'エントリーを解除する';
+        joinBtn.className = 'w-full bg-gray-200 text-gray-600 py-2.5 rounded-xl font-bold text-xs border active:bg-gray-300';
+        joinBtn.disabled = false;
+      } else if (isClosed) {
+        joinBtn.innerText = '募集締め切りにつき追加エントリー不可';
+        joinBtn.className = 'w-full bg-gray-200 text-gray-400 py-2.5 rounded-xl font-bold text-xs border cursor-not-allowed';
+        joinBtn.disabled = true;
+      } else {
+        joinBtn.innerText = 'このバンドをやりたい！';
+        joinBtn.className = 'w-full bg-orange-500 text-white py-2.5 rounded-xl font-bold text-xs shadow-md active:bg-orange-600';
+        joinBtn.disabled = false;
+      }
+      joinBtn.onclick = () => toggleJoin(bandId);
+
+      const partCounts = { 'ボーカル': 0, 'ギター': 0, 'ベース': 0, 'ドラム': 0, 'キーボード': 0 };
+      members.forEach(m => {
+        if (m.parts) m.parts.forEach(p => { if (p in partCounts) partCounts[p]++; });
+      });
+      const summaryEl = document.getElementById('modal-part-summary');
+      summaryEl.innerHTML = Object.entries(partCounts).map(([part, count]) => {
+        const color = count > 0 ? 'bg-orange-100 text-orange-700 font-bold border-orange-200' : 'bg-gray-100 text-gray-400 border-gray-200/60';
+        return `<span class="px-2 py-0.5 border rounded ${color}">${part}: ${count}</span>`;
+      }).join('');
 
       const listEl = document.getElementById('modal-member-list');
-      listEl.innerHTML = members.length === 0 ? `<p class="text-xs text-gray-400 text-center py-4">誰も選択していません</p>` : members.map(m => `
-        <div class="p-2.5 bg-orange-50/50 rounded-xl border text-xs">
-          <div class="flex justify-between font-bold">
-            <span>${m.name}</span>
-            <span class="text-orange-600 text-[10px]">
-              ${(m.parts || []).join(', ')}
-            </span>
+      listEl.innerHTML = members.length === 0 
+        ? `<p class="text-[11px] text-gray-400 italic w-full text-center py-2">誰も選択していません</p>` 
+        : members.map(m => {
+            const gradeColor = getGradeColor(m.grade);
+            return `
+              <div class="inline-flex items-center gap-1 bg-orange-50/70 border border-orange-100 px-2 py-1 rounded-lg text-xs">
+                <span class="font-bold text-gray-800">${m.name}</span>
+                <span class="text-[8px] px-1 rounded border ${gradeColor} font-black scale-90">${m.grade || '新入生'}</span>
+                <span class="text-[9px] text-orange-600 font-semibold">${(m.parts || []).join('/')}</span>
+                ${m.line_id ? `<span class="text-[9px] text-green-600 font-bold ml-0.5" title="LINE ID: ${m.line_id}"><i class="fa-brands fa-line"></i></span>` : ''}
+              </div>
+            `;
+          }).join('');
+
+      updateModalChatTimeline(bandId);
+    }
+
+    function updateModalChatTimeline(bandId) {
+      const chatTimeline = document.getElementById('modal-chat-timeline');
+      if (!chatTimeline) return;
+
+      const filteredMsgs = allChatMessages.filter(m => m.band_id === bandId);
+      if (filteredMsgs.length === 0) {
+        chatTimeline.innerHTML = `<p class="text-[10px] text-gray-400 text-center py-6 italic">作戦会議チャットにまだ発言はありません</p>`;
+        return;
+      }
+
+      chatTimeline.innerHTML = filteredMsgs.map(m => {
+        const isMe = m.user_id === myId;
+        const gradeColor = getGradeColor(m.user_grade);
+        return `
+          <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5">
+            <div class="flex items-center gap-1 text-[9px] text-gray-400">
+              <span class="font-bold text-gray-600">${m.user_name}</span>
+              <span class="px-1 rounded border ${gradeColor} font-black scale-75 origin-left">${m.user_grade || '新入生'}</span>
+            </div>
+            <div class="p-2 rounded-xl text-xs max-w-[85%] break-words shadow-sm ${isMe ? 'bg-orange-500 text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'}">
+              ${m.text}
+            </div>
           </div>
-          <p class="text-gray-600 mt-0.5">${m.bio || ''}</p>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+    }
+
+    function scrollChatToBottom() {
+      const chatTimeline = document.getElementById('modal-chat-timeline');
+      if (chatTimeline) chatTimeline.scrollTop = chatTimeline.scrollHeight;
     }
 
     window.closeModal = function() {
@@ -508,15 +869,17 @@
     }
 
     async function toggleJoin(bandId) {
-      if (!me.bandIds) me.bandIds = [];
-      const index = me.bandIds.indexOf(bandId);
-      if (index > -1) me.bandIds.splice(index, 1);
-      else me.bandIds.push(bandId);
+      if (!me.band_ids) me.band_ids = [];
+      const index = me.band_ids.indexOf(bandId);
+      if (index > -1) me.band_ids.splice(index, 1);
+      else me.band_ids.push(bandId);
       
-      if (currentTab === 'custom' || currentTab === 'static') updateBandListOnly();
-      if (currentSelectedBandId) updateModalOnly(bandId);
+      refreshUI();
       await saveMyDataToCloud();
     }
+
+    // 初回レンダリング
+    render();
   </script>
 </body>
 </html>
